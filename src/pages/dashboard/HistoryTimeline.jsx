@@ -461,7 +461,7 @@ const HistoryTimeline = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <Loader className="h-12 w-12 text-green-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading historical data...</p>
@@ -472,7 +472,7 @@ const HistoryTimeline = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-600 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load data</h3>
@@ -489,7 +489,7 @@ const HistoryTimeline = () => {
   }
 
   return (
-    <div className="min-h-screen bg-green-50 p-6">
+    <div className="space-y-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>

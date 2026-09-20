@@ -15,7 +15,9 @@ import ImageGallery from '../pages/dashboard/ImageGallery'
 import OfficerTracker from '../pages/dashboard/OfficerTracker'
 import Reports from '../pages/dashboard/Reports'
 import Overview from '../pages/dashboard/Overview'
-import GrowthAnalysis from '../pages/dashboard/GrowthAnalysis';
+import GrowthAnalysis from '../pages/dashboard/GrowthAnalysis'
+import RiskForecast from '../pages/dashboard/RiskForecast'
+import FollowUpMonitoring from '../pages/dashboard/FollowUpMonitoring'
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth()
@@ -55,7 +57,9 @@ const AppRouter = () => {
         <Route path="cce" element={<CCEOptimization />} />
         <Route path="reports" element={<Reports />} />
         <Route path="history" element={<HistoryTimeline />} />
-        <Route path="growth-analysis" element={<GrowthAnalysis />} />
+        <Route path="growth" element={<GrowthAnalysis />} />
+        <Route path="risk" element={<RiskForecast />} />
+        <Route path="follow-up" element={<FollowUpMonitoring />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />

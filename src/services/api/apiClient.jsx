@@ -1,10 +1,12 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || ''
+
+export const isBackendConfigured = () => Boolean(API_BASE_URL)
 
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
+  baseURL: API_BASE_URL || undefined,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   }
