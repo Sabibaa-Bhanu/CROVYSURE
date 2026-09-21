@@ -527,7 +527,7 @@ export default function AIAnalysisPanel() {
                 <div className="flex-1">
 
                   <p className="font-medium text-gray-900">
-                    Model A — Crop Classification
+                    Model A &mdash; Crop Classification
                   </p>
 
                   <p className="text-xs text-gray-500">
@@ -566,7 +566,7 @@ export default function AIAnalysisPanel() {
                 <div className="flex-1">
 
                   <p className="font-medium text-gray-900">
-                    Model B — Growth Stage
+                    Model B &mdash; Growth Stage
                   </p>
 
                   <p className="text-xs text-gray-500">
@@ -605,7 +605,7 @@ export default function AIAnalysisPanel() {
                 <div className="flex-1">
 
                   <p className="font-medium text-gray-900">
-                    Model C — Disease Detection
+                    Model C &mdash; Disease Detection
                   </p>
 
                   <p className="text-xs text-gray-500">
@@ -644,7 +644,7 @@ export default function AIAnalysisPanel() {
                 <div className="flex-1">
 
                   <p className="font-medium text-gray-900">
-                    Model D — Pest Detection
+                    Model D &mdash; Pest Detection
                   </p>
 
                   <p className="text-xs text-gray-500">
