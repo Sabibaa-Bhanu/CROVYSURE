@@ -433,3 +433,105 @@ export function generateFollowUpRecommendation(comparison) {
     ]
   }
 }
+
+/**
+ * Generates a deterministic Model D — Pest Detection result.
+ *
+ * In production, this function should be replaced by an API call to the
+ * pest detection ML endpoint. The function signature is intentionally kept
+ * simple so the replacement is a single-line change.
+ *
+ * @param {object} options
+ * @param {string} [options.imageName]  - Uploaded image filename (used as seed for determinism)
+ * @param {string} [options.fieldId]    - Optional field ID for context
+ * @returns {PestDetectionResult}
+ */
+export function generatePestDetectionResult({ imageName = '', fieldId = null } = {}) {
+  // Deterministic seed from image name (so same image always returns same result)
+  let seed = 0
+  for (let i = 0; i < imageName.length; i++) {
+    seed = (seed * 31 + imageName.charCodeAt(i)) & 0xffff
+  }
+
+  const pestScenarios = [
+    {
+      pestName: 'Stem Borer',
+      scientificName: 'Scirpophaga incertulas',
+      severity: 'Moderate',
+      confidence: 0.879,
+      affectedAreaPct: 22,
+      managementAdvice:
+        'Stem borer egg masses detected on leaf sheath. Larval tunneling can cause deadheart in vegetative stage. Apply recommended chlorantraniliprole-based granules at the base of tillers during early morning hours when dew is present.',
+      actionSteps: [
+        'Collect and destroy egg masses found on the underside of leaf sheaths.',
+        'Apply carbofuran 3G granules (10 kg/acre) or equivalent label-approved systemic insecticide.',
+        'Avoid flooding the field immediately after granule application to retain efficacy.',
+        'Schedule re-inspection in 5–7 days to verify larval control effectiveness.',
+        'Upload follow-up image capturing the affected stem cross-section for comparison.',
+      ],
+    },
+    {
+      pestName: 'Brown Planthopper',
+      scientificName: 'Nilaparvata lugens',
+      severity: 'High',
+      confidence: 0.931,
+      affectedAreaPct: 37,
+      managementAdvice:
+        'Brown planthopper population detected above economic threshold level. Hopperburn risk is elevated if the current humid microclimate persists. Avoid broadcasting pyrethroid insecticides which may suppress natural enemies and worsen the outbreak.',
+      actionSteps: [
+        'Drain standing water temporarily to disrupt nymphal microhabitat.',
+        'Apply buprofezin (Applaud) or pymetrozine (Chess) per label rate — avoid synthetic pyrethroids.',
+        'Check 20 random hill sites using a flashlight at night to estimate infestation density.',
+        'Remove weed hosts (Leersia spp.) along field bunds.',
+        'Inspect again in 4 days and upload follow-up photograph at canopy base level.',
+      ],
+    },
+    {
+      pestName: 'Whitefly',
+      scientificName: 'Bemisia tabaci',
+      severity: 'Low',
+      confidence: 0.843,
+      affectedAreaPct: 11,
+      managementAdvice:
+        'Early-stage whitefly nymph colonies identified under leaf surfaces. Population is currently below the economic injury level. Monitor closely as warm, dry conditions can cause rapid population increase within 7–10 days.',
+      actionSteps: [
+        'Tap plants early morning and count falling adults using a yellow sticky trap.',
+        'Apply neem oil (3 ml/litre) spray on the underside of leaves as a repellent.',
+        'Avoid excessive nitrogen application which promotes lush foliage preferred by whiteflies.',
+        'Record population density at next weekly monitoring cycle.',
+      ],
+    },
+    {
+      pestName: 'No Pest Detected',
+      scientificName: 'N/A',
+      severity: 'None',
+      confidence: 0.962,
+      affectedAreaPct: 0,
+      managementAdvice:
+        'Model D analysis indicates no significant pest presence in the submitted image. The visible canopy appears free from characteristic pest damage patterns including feeding holes, honeydew deposits, and egg masses. Continue standard weekly monitoring.',
+      actionSteps: [
+        'Maintain scheduled field monitoring as planned.',
+        'Ensure field boundary weeds are cleared to minimize pest harbour.',
+        'Record next monitoring observation on the scheduled date.',
+      ],
+    },
+    {
+      pestName: 'Aphid Colony',
+      scientificName: 'Rhopalosiphum maidis',
+      severity: 'Moderate',
+      confidence: 0.857,
+      affectedAreaPct: 17,
+      managementAdvice:
+        'Aphid colonies forming on new growth and tassels. Honeydew secretions observed indicating active feeding. Natural enemies (Coccinellids, lacewings) should be monitored before initiating chemical control.',
+      actionSteps: [
+        'Survey 30 random plants and count colonies; record whether natural enemies are present.',
+        'Apply imidacloprid seed treatment equivalent or dimethoate 30 EC if colony count exceeds threshold.',
+        'Avoid broad-spectrum insecticides during flowering to protect pollinators.',
+        'Upload a close-up image of the affected node region for clearer classification.',
+      ],
+    },
+  ]
+
+  const scenario = pestScenarios[seed % pestScenarios.length]
+  return scenario
+}

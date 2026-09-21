@@ -15,7 +15,9 @@ import {
   Loader2,
   FileImage,
   ScanSearch,
+  Bug,
 } from "lucide-react";
+import { generatePestDetectionResult } from "../../services/cropIntelligence";
 
 export default function AIAnalysisPanel() {
   const [image, setImage] = useState(null);
@@ -68,6 +70,12 @@ export default function AIAnalysisPanel() {
 
     setTimeout(() => {
       setPipelineStep(4);
+    }, 2700);
+
+    setTimeout(() => {
+      setPipelineStep(5);
+
+      const pestResult = generatePestDetectionResult({ imageName: image?.name });
 
       setResult({
         crop: "Paddy",
@@ -85,10 +93,11 @@ export default function AIAnalysisPanel() {
           "Maintain adequate field moisture during the flowering stage. Avoid prolonged water stress and monitor field water levels regularly.",
         disease_advice:
           "Bacterial blight symptoms detected. Remove severely affected plant material where practical, maintain field hygiene, and follow locally recommended disease-management practices.",
+        pest: pestResult,
       });
 
       setLoading(false);
-    }, 2800);
+    }, 3700);
   };
 
   const resetAnalysis = () => {
@@ -159,7 +168,7 @@ export default function AIAnalysisPanel() {
             </h2>
 
             <p className="text-sm text-gray-500 mt-1">
-              Three-stage crop intelligence analysis
+              Four-stage crop intelligence analysis
             </p>
           </div>
 
@@ -171,7 +180,7 @@ export default function AIAnalysisPanel() {
         </div>
 
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* MODEL A */}
           <div
@@ -288,6 +297,47 @@ export default function AIAnalysisPanel() {
 
             {pipelineStep >= 4 && (
               <div className="flex items-center gap-1 mt-3 text-xs text-red-600 font-medium">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Completed
+              </div>
+            )}
+
+          </div>
+
+
+          {/* MODEL D */}
+          <div
+            className={`border rounded-xl p-4 transition-all ${
+              pipelineStep >= 4
+                ? "bg-amber-50 border-amber-300"
+                : "bg-gray-50 border-gray-200"
+            }`}
+          >
+
+            <div className="flex items-center gap-3">
+
+              <div className="w-11 h-11 bg-amber-100 rounded-xl flex items-center justify-center">
+                <Bug className="h-5 w-5 text-amber-700" />
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-amber-700">
+                  MODEL D
+                </p>
+
+                <h3 className="font-semibold text-gray-900">
+                  Pest Detection
+                </h3>
+              </div>
+
+            </div>
+
+            <p className="text-xs text-gray-500 mt-3">
+              Identifies pest presence and infestation severity level.
+            </p>
+
+            {pipelineStep >= 5 && (
+              <div className="flex items-center gap-1 mt-3 text-xs text-amber-700 font-medium">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Completed
               </div>
@@ -566,6 +616,45 @@ export default function AIAnalysisPanel() {
               </div>
 
 
+              <div className="ml-5 h-4 border-l border-dashed border-gray-300" />
+
+
+              {/* MODEL D STATUS */}
+              <div className="flex items-center gap-4">
+
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    pipelineStep >= 4
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {loading && pipelineStep === 4 ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Bug className="h-5 w-5" />
+                  )}
+                </div>
+
+                <div className="flex-1">
+
+                  <p className="font-medium text-gray-900">
+                    Model D — Pest Detection
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    None / Stem Borer / Whitefly / Aphid / Brown Planthopper
+                  </p>
+
+                </div>
+
+                {pipelineStep >= 5 && (
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                )}
+
+              </div>
+
+
               {/* STATUS */}
               <div className="mt-6 p-4 bg-gray-50 rounded-xl">
 
@@ -804,6 +893,12 @@ export default function AIAnalysisPanel() {
           </div>
 
 
+          {/* MODEL D — PEST DETECTION RESULT */}
+          {result?.pest && (
+            <PestDetectionResult pest={result.pest} />
+          )}
+
+
           {/* DEMO NOTICE */}
           <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
 
@@ -817,8 +912,8 @@ export default function AIAnalysisPanel() {
 
               <p className="text-sm text-yellow-700 mt-1">
                 The displayed prediction is demo data for the
-                CROVYSURE interface. Real Model A, B and C
-                predictions will be connected later.
+                CROVYSURE interface. Real Model A, B, C and D
+                predictions will be connected to live ML endpoints later.
               </p>
 
             </div>
@@ -909,6 +1004,150 @@ function RecommendationCard({
       <p className="text-sm text-gray-600 leading-6">
         {text}
       </p>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   MODEL D — PEST DETECTION RESULT
+========================================================= */
+
+function PestDetectionResult({ pest }) {
+  const severityColors = {
+    None: "bg-green-100 text-green-700 border-green-200",
+    Low: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    Moderate: "bg-orange-100 text-orange-700 border-orange-200",
+    High: "bg-red-100 text-red-700 border-red-200",
+  };
+
+  const severityBg = {
+    None: "bg-green-50 border-green-100",
+    Low: "bg-yellow-50 border-yellow-100",
+    Moderate: "bg-orange-50 border-orange-100",
+    High: "bg-red-50 border-red-100",
+  };
+
+  const tag = severityColors[pest.severity] || severityColors.Low;
+  const cardBg = severityBg[pest.severity] || severityBg.Low;
+
+  return (
+    <div className="bg-white rounded-2xl border border-amber-100 shadow-lg overflow-hidden">
+
+      <div className="px-6 py-5 border-b border-amber-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+
+        <div className="flex items-center gap-3">
+
+          <div className="p-2 bg-amber-100 rounded-lg">
+            <Bug className="h-5 w-5 text-amber-700" />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-semibold text-amber-700">MODEL D</p>
+            </div>
+            <h2 className="font-bold text-gray-900">Pest Detection Result</h2>
+          </div>
+
+        </div>
+
+        <span className={`self-start md:self-auto px-3 py-1.5 rounded-xl text-xs font-semibold border ${tag}`}>
+          {pest.severity === "None" ? "No Pest Detected" : `${pest.severity} Infestation`}
+        </span>
+
+      </div>
+
+
+      <div className="p-6 space-y-5">
+
+        {/* DETECTION CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* PEST NAME */}
+          <div className={`border rounded-xl p-4 ${cardBg}`}>
+
+            <p className="text-xs text-gray-500 mb-1">Detected Pest</p>
+
+            <p className="text-lg font-bold text-gray-900">
+              {pest.pestName}
+            </p>
+
+            <p className="text-xs text-gray-500 mt-1 italic">
+              {pest.scientificName}
+            </p>
+
+          </div>
+
+
+          {/* CONFIDENCE */}
+          <div className="border border-gray-100 bg-gray-50 rounded-xl p-4">
+
+            <p className="text-xs text-gray-500 mb-2">Model D Confidence</p>
+
+            <p className="text-lg font-bold text-gray-900">
+              {(pest.confidence * 100).toFixed(1)}%
+            </p>
+
+            <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-amber-500 rounded-full transition-all duration-700"
+                style={{ width: `${pest.confidence * 100}%` }}
+              />
+            </div>
+
+          </div>
+
+
+          {/* AFFECTED AREA */}
+          <div className="border border-gray-100 bg-gray-50 rounded-xl p-4">
+
+            <p className="text-xs text-gray-500 mb-1">Estimated Affected Area</p>
+
+            <p className="text-lg font-bold text-gray-900">
+              {pest.affectedAreaPct}%
+            </p>
+
+            <p className="text-xs text-gray-500 mt-1">
+              of visible canopy
+            </p>
+
+          </div>
+
+        </div>
+
+
+        {/* MANAGEMENT RECOMMENDATION */}
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+
+          <p className="text-sm font-semibold text-gray-900 mb-1">Management Recommendation</p>
+
+          <p className="text-sm text-gray-600 leading-6">
+            {pest.managementAdvice}
+          </p>
+
+        </div>
+
+
+        {/* ACTION STEPS */}
+        {pest.actionSteps && pest.actionSteps.length > 0 && (
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-3">Recommended Action Steps</p>
+
+            <ul className="space-y-2">
+              {pest.actionSteps.map((step, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-600">
+                  <span className="mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                    {idx + 1}
+                  </span>
+                  {step}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+      </div>
 
     </div>
   );
