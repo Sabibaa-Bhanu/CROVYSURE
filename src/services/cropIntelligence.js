@@ -434,104 +434,523 @@ export function generateFollowUpRecommendation(comparison) {
   }
 }
 
+
+/* ============================================================
+   MODEL D — PEST CLASS CONFIGURATION
+   Single source of truth for all active Model D pest classes.
+
+   Dataset summary:
+     Corn    — 6 classes
+     Cotton  — 3 classes  (Cotton_Leafworm & Cotton_Thrips excluded: 0 images)
+     Paddy   — 9 classes
+     Wheat   — 6 classes
+     TOTAL   — 24 active classes
+
+   NOTE: Class identifiers use the exact dataset folder names (underscore
+   format). The UI converts these to human-readable strings via
+   formatPestName(). Do NOT alter the identifiers here — they must match
+   the ML model output exactly so the frontend works without changes once
+   the real inference endpoint is connected.
+============================================================ */
+
+export const PEST_CLASSES = {
+  Corn: [
+    'Aphid',
+    'Army_Worm',
+    'Corn_Borer',
+    'Fall_Armyworm',
+    'Peach_Borer',
+    'Potosiabre_vitarsis',
+  ],
+  Cotton: [
+    // Cotton_Leafworm and Cotton_Thrips are excluded — zero images in dataset
+    'Aphid',
+    'Cotton_Bollworm',
+    'Cotton_Whitefly',
+  ],
+  Paddy: [
+    'Brown_Plant_Hopper',
+    'Leaf_Folder',
+    'Paddy_Stem_Maggot',
+    'Rice_Gall_Midge',
+    'Rice_Leaf_Caterpillar',
+    'Rice_Skipper',
+    'White_Backed_Plant_Hopper',
+    'White_Stem_Borer',
+    'Yellow_Stem_Borer',
+  ],
+  Wheat: [
+    'Bird_Cherry_Oat_Aphid',
+    'English_Grain_Aphid',
+    'Green_Bug',
+    'Wheat_Blossom_Midge',
+    'Wheat_Phloeothrips',
+    'Wheat_Sawfly',
+  ],
+}
+
 /**
- * Generates a deterministic Model D — Pest Detection result.
+ * Converts a dataset class identifier to a human-readable display string.
+ * e.g. "Brown_Plant_Hopper" → "Brown Plant Hopper"
+ *      "Cotton_Whitefly"    → "Cotton Whitefly"
  *
- * In production, this function should be replaced by an API call to the
- * pest detection ML endpoint. The function signature is intentionally kept
- * simple so the replacement is a single-line change.
+ * The original identifier is always preserved for API/model use.
+ *
+ * @param {string} classId - Dataset class identifier (underscore format)
+ * @returns {string} Human-readable name
+ */
+export function formatPestName(classId) {
+  if (!classId || typeof classId !== 'string') return 'Unknown'
+  return classId.replace(/_/g, ' ')
+}
+
+/**
+ * Validates that a pest class identifier belongs to the active dataset.
+ * If an unexpected class is returned by the API, this returns false so
+ * the UI can show a safe fallback instead of silently mapping to a wrong class.
+ *
+ * @param {string} classId - Pest class identifier to validate
+ * @returns {boolean}
+ */
+export function validatePestClass(classId) {
+  return Object.values(PEST_CLASSES).some((classes) => classes.includes(classId))
+}
+
+/**
+ * Returns the valid pest classes for a given crop.
+ * Normalises the crop name to handle slight variations from Model A output.
+ *
+ * @param {string} crop - Crop name returned by Model A (e.g. "Paddy", "Rice (Paddy)", "Corn")
+ * @returns {string[]} Array of dataset class identifiers valid for that crop
+ */
+export function getPestClassesForCrop(crop) {
+  if (!crop) return []
+  const normalized = crop.toLowerCase()
+  if (normalized.includes('corn') || normalized.includes('maize')) return PEST_CLASSES.Corn
+  if (normalized.includes('cotton')) return PEST_CLASSES.Cotton
+  if (normalized.includes('paddy') || normalized.includes('rice')) return PEST_CLASSES.Paddy
+  if (normalized.includes('wheat')) return PEST_CLASSES.Wheat
+  return []
+}
+
+/* ----------------------------------------------------------
+   Deterministic advisory data for each dataset pest class.
+   Keyed by exact dataset class identifier.
+   Used by the demo mode only — will be replaced by real model
+   inference output once the backend endpoint is connected.
+---------------------------------------------------------- */
+
+const PEST_ADVISORY = {
+  // ── CORN ─────────────────────────────────────────────────
+  Aphid: {
+    scientificName: 'Rhopalosiphum maidis',
+    severity: 'Moderate',
+    confidence: 0.857,
+    affectedAreaPct: 17,
+    managementAdvice:
+      'Aphid colonies forming on new growth and tassels. Honeydew secretions observed indicating active feeding. Survey natural enemies (Coccinellids, lacewings) before initiating chemical control.',
+    actionSteps: [
+      'Survey 30 random plants; record whether natural enemies are present.',
+      'Apply imidacloprid or dimethoate 30 EC if colony count exceeds threshold.',
+      'Avoid broad-spectrum insecticides during flowering to protect pollinators.',
+      'Upload a close-up image of the affected node region for clearer classification.',
+    ],
+  },
+  Army_Worm: {
+    scientificName: 'Mythimna separata',
+    severity: 'High',
+    confidence: 0.912,
+    affectedAreaPct: 31,
+    managementAdvice:
+      'Army worm mass migration detected. Larvae can cause complete defoliation within 48–72 hours if unchecked. Immediate perimeter barrier spray is recommended before larvae migrate further.',
+    actionSteps: [
+      'Inspect field edges at dusk when larvae are most active.',
+      'Apply chlorpyrifos 20 EC or emamectin benzoate 5 SG as per label rate.',
+      'Create a shallow trench along the field boundary to trap migrating larvae.',
+      'Re-inspect in 3 days and upload follow-up image of leaf damage extent.',
+    ],
+  },
+  Corn_Borer: {
+    scientificName: 'Ostrinia furnacalis',
+    severity: 'Moderate',
+    confidence: 0.874,
+    affectedAreaPct: 24,
+    managementAdvice:
+      'Corn borer larvae detected tunneling into stalks and ears. Frass deposits visible near entry holes. Early intervention limits stalk breakage and ear damage.',
+    actionSteps: [
+      'Cut and destroy infested stalks showing frass at entry holes.',
+      'Apply fipronil 5 SC or spinosad granules into the whorl during the vegetative stage.',
+      'Release Trichogramma parasitoids (50,000 eggs/ha) during egg-laying peak.',
+      'Monitor 10 plants per sampling site; record bored stalk percentage.',
+    ],
+  },
+  Fall_Armyworm: {
+    scientificName: 'Spodoptera frugiperda',
+    severity: 'High',
+    confidence: 0.943,
+    affectedAreaPct: 38,
+    managementAdvice:
+      'Fall armyworm feeding damage detected on whorl leaves. Window-pane and pin-hole patterns visible, consistent with second-instar larval feeding. This is a regulated pest requiring immediate action.',
+    actionSteps: [
+      'Apply emamectin benzoate 5 SG (0.4 g/litre) or spinetoram to the whorl.',
+      'Inspect each plant whorl at 20 random sites; count live larvae per plant.',
+      'Set up pheromone traps (5/ha) to monitor adult moth flight.',
+      'Report infestation to local agriculture extension officer as required.',
+    ],
+  },
+  Peach_Borer: {
+    scientificName: 'Synanthedon exitiosa',
+    severity: 'Low',
+    confidence: 0.821,
+    affectedAreaPct: 9,
+    managementAdvice:
+      'Peach borer activity detected at stalk base. Gum-like exudate and sawdust frass at crown indicate larval entry. Low population density — preventive treatment is adequate.',
+    actionSteps: [
+      'Remove soil from crown area and physically destroy visible larvae.',
+      'Apply chlorpyrifos drench at stalk base as a prophylactic measure.',
+      'Wrap stalk base with agri-fabric to deter egg-laying adults.',
+      'Record next observation within 7 days.',
+    ],
+  },
+  Potosiabre_vitarsis: {
+    scientificName: 'Protaetia brevitarsis',
+    severity: 'Low',
+    confidence: 0.803,
+    affectedAreaPct: 7,
+    managementAdvice:
+      'Adult beetles (Protaetia brevitarsis) detected feeding on silk and tassel. Population is below economic injury level but should be monitored through pollination period to prevent ear damage.',
+    actionSteps: [
+      'Hand-collect and destroy visible adults during early morning hours.',
+      'Monitor silk damage daily during pollination period.',
+      'Avoid overhead irrigation which attracts beetles to moist silks.',
+      'Apply kaolin clay spray on ears as a physical deterrent if population increases.',
+    ],
+  },
+  // ── COTTON ───────────────────────────────────────────────
+  Cotton_Bollworm: {
+    scientificName: 'Helicoverpa armigera',
+    severity: 'High',
+    confidence: 0.928,
+    affectedAreaPct: 33,
+    managementAdvice:
+      'Cotton bollworm (Helicoverpa armigera) egg masses and early-instar larvae detected on squares and bolls. Population is approaching economic threshold. Larvae develop resistance rapidly — rotate insecticide modes of action.',
+    actionSteps: [
+      'Check 5 plants per site for egg masses on upper leaf surface.',
+      'Apply indoxacarb 14.5 SC or chlorantraniliprole 18.5 SC per label rate.',
+      'Deploy Helicoverpa pheromone traps (5/ha) to track adult activity.',
+      'Avoid continuous application of the same insecticide class in successive sprays.',
+    ],
+  },
+  Cotton_Whitefly: {
+    scientificName: 'Bemisia tabaci (biotype B)',
+    severity: 'Moderate',
+    confidence: 0.861,
+    affectedAreaPct: 21,
+    managementAdvice:
+      'Cotton whitefly (Bemisia tabaci) nymph density detected above EIL on lower leaf surfaces. This biotype is a vector for Cotton Leaf Curl Virus — control is urgent to prevent virus spread.',
+    actionSteps: [
+      'Apply buprofezin 25 WP or spiromesifen 22.9 SC under the leaf canopy.',
+      'Avoid pyrethroids which disrupt natural enemies and cause population resurgence.',
+      'Install yellow sticky traps (5/ha) to monitor adult flight.',
+      'Remove and destroy heavily infested leaves to reduce inoculum.',
+    ],
+  },
+  // ── PADDY ────────────────────────────────────────────────
+  Brown_Plant_Hopper: {
+    scientificName: 'Nilaparvata lugens',
+    severity: 'High',
+    confidence: 0.931,
+    affectedAreaPct: 37,
+    managementAdvice:
+      'Brown Plant Hopper population detected above economic threshold. Hopperburn risk is elevated under the current humid microclimate. Avoid synthetic pyrethroids which suppress natural enemies and worsen outbreaks.',
+    actionSteps: [
+      'Drain standing water temporarily to disrupt nymphal microhabitat.',
+      'Apply buprofezin (Applaud) or pymetrozine (Chess) per label rate.',
+      'Check 20 random hill sites with a flashlight at night to estimate density.',
+      'Remove weed hosts (Leersia spp.) along field bunds.',
+    ],
+  },
+  Leaf_Folder: {
+    scientificName: 'Cnaphalocrocis medinalis',
+    severity: 'Moderate',
+    confidence: 0.876,
+    affectedAreaPct: 19,
+    managementAdvice:
+      'Rice leaf folder larvae rolling and feeding on leaves. White papery streaks visible across the canopy. Economic injury level is 10% leaf area damage — current infestation is approaching this threshold.',
+    actionSteps: [
+      'Clip and collect rolled leaves containing larvae; destroy away from field.',
+      'Apply chlorantraniliprole 18.5 SC or lambda-cyhalothrin 5 EC per label.',
+      'Reduce excessive nitrogen which promotes lush growth preferred by leaf folders.',
+      'Inspect 20 random tillers; record percentage with folded leaves.',
+    ],
+  },
+  Paddy_Stem_Maggot: {
+    scientificName: 'Chlorops oryzae',
+    severity: 'Moderate',
+    confidence: 0.843,
+    affectedAreaPct: 16,
+    managementAdvice:
+      'Paddy stem maggot infestation detected. Larval feeding causes "deadheart" in vegetative stage and "whiteear" at reproductive stage. Damage resembles stem borer but maggot is a distinct class.',
+    actionSteps: [
+      'Uproot and destroy affected tillers showing deadheart symptoms.',
+      'Apply carbofuran 3G granules (10 kg/acre) at the base of tillers.',
+      'Maintain field sanitation by removing crop debris from previous season.',
+      'Record number of deadheart tillers per sample site.',
+    ],
+  },
+  Rice_Gall_Midge: {
+    scientificName: 'Orseolia oryzae',
+    severity: 'Moderate',
+    confidence: 0.887,
+    affectedAreaPct: 20,
+    managementAdvice:
+      'Rice gall midge infestation confirmed — silver shoot (onion leaf) symptoms visible. Infested tillers will not produce panicles. Early intervention is critical at transplanting and active tillering stages.',
+    actionSteps: [
+      'Pull and count silver shoots per hill to assess infestation percentage.',
+      'Apply carbofuran 3G or fipronil granules within 30 days of transplanting.',
+      'Avoid early transplanting dates that coincide with gall midge adult flight peak.',
+      'Upload close-up image of silver shoot for confirmation.',
+    ],
+  },
+  Rice_Leaf_Caterpillar: {
+    scientificName: 'Marasmia patnalis',
+    severity: 'Low',
+    confidence: 0.832,
+    affectedAreaPct: 12,
+    managementAdvice:
+      'Rice leaf caterpillar feeding detected. Larvae scrape the leaf mesophyll leaving white streaks. Population is below EIL but early-stage management prevents escalation.',
+    actionSteps: [
+      'Release Trichogramma parasitoids as a biological control measure.',
+      'Apply neem-based formulations (Azadirachtin 1500 ppm) as a low-risk option.',
+      'Monitor 15 tillers per sampling point; record larval count.',
+      'Schedule follow-up in 5 days.',
+    ],
+  },
+  Rice_Skipper: {
+    scientificName: 'Parnara guttata',
+    severity: 'Low',
+    confidence: 0.818,
+    affectedAreaPct: 8,
+    managementAdvice:
+      'Rice skipper larvae detected rolling leaf tips. Irregular leaf-tip rolling with frass inside visible. Population is isolated — spot treatment is preferred over broadcast spraying.',
+    actionSteps: [
+      'Clip and destroy rolled leaf tips containing larvae.',
+      'Apply triazophos or monocrotophos at affected spots only.',
+      'Monitor expansion of damage over the next 5 days.',
+      'Document by uploading a follow-up image of the canopy.',
+    ],
+  },
+  White_Backed_Plant_Hopper: {
+    scientificName: 'Sogatella furcifera',
+    severity: 'Moderate',
+    confidence: 0.869,
+    affectedAreaPct: 23,
+    managementAdvice:
+      'White Backed Plant Hopper detected. Symptoms similar to Brown Plant Hopper but this species prefers the upper canopy. Current density warrants preventive spray before tillering is complete.',
+    actionSteps: [
+      'Apply etofenprox or buprofezin per the label — avoid pyrethroids.',
+      'Drain field briefly to disrupt nymphal habitat.',
+      'Install light traps to monitor adult flight and predict population peaks.',
+      'Check 20 hill sites for nymph count; record per site.',
+    ],
+  },
+  White_Stem_Borer: {
+    scientificName: 'Scirpophaga innotata',
+    severity: 'Moderate',
+    confidence: 0.879,
+    affectedAreaPct: 22,
+    managementAdvice:
+      'White Stem Borer egg masses detected on leaf sheaths. Larval tunneling causes deadheart (vegetative) and whiteear (reproductive). Distinct from Yellow Stem Borer — apply species-appropriate management.',
+    actionSteps: [
+      'Collect and destroy egg masses on the underside of leaf sheaths.',
+      'Apply carbofuran 3G granules (10 kg/acre) at tiller base.',
+      'Avoid flooding immediately after granule application to retain efficacy.',
+      'Re-inspect in 5–7 days to verify larval control effectiveness.',
+    ],
+  },
+  Yellow_Stem_Borer: {
+    scientificName: 'Scirpophaga incertulas',
+    severity: 'High',
+    confidence: 0.904,
+    affectedAreaPct: 29,
+    managementAdvice:
+      'Yellow Stem Borer is the primary stem borer species of paddy, with higher prevalence than White Stem Borer. Egg masses have characteristic golden-yellow scales. Deadheart incidence is escalating — immediate action required.',
+    actionSteps: [
+      'Remove and destroy egg masses — identify by yellow silky scales covering them.',
+      'Apply chlorantraniliprole 18.5 SC (0.3 ml/litre) or carbofuran 3G granules.',
+      'Set up light traps (1/ha) to monitor adult moth emergence.',
+      'Inspect 25 tillers per site; record deadheart percentage at next visit.',
+    ],
+  },
+  // ── WHEAT ────────────────────────────────────────────────
+  Bird_Cherry_Oat_Aphid: {
+    scientificName: 'Rhopalosiphum padi',
+    severity: 'Moderate',
+    confidence: 0.851,
+    affectedAreaPct: 18,
+    managementAdvice:
+      'Bird Cherry Oat Aphid colonies detected on lower leaf sheaths and stems. This species is also a vector for Barley Yellow Dwarf Virus. Early control limits both direct damage and virus spread.',
+    actionSteps: [
+      'Count colonies on 20 stems at tillering; treat if ≥5 colonies/stem.',
+      'Apply pirimicarb 50 WG (aphid-selective) to spare beneficial insects.',
+      'Monitor for virus symptoms (yellowing, stunting) over the next 10 days.',
+      'Record and upload follow-up image showing aphid distribution on stems.',
+    ],
+  },
+  English_Grain_Aphid: {
+    scientificName: 'Sitobion avenae',
+    severity: 'Moderate',
+    confidence: 0.862,
+    affectedAreaPct: 15,
+    managementAdvice:
+      'English Grain Aphid colonies detected on upper leaves and ears. Peak damage occurs during heading — aphid feeding at this stage reduces grain weight significantly.',
+    actionSteps: [
+      'Monitor 10 ears per site; treat if ≥5 aphids per ear at heading.',
+      'Apply lambda-cyhalothrin or pirimicarb per label before full ear emergence.',
+      'Preserve natural enemies by avoiding broad-spectrum insecticide applications.',
+      'Document population density trend at next weekly observation.',
+    ],
+  },
+  Green_Bug: {
+    scientificName: 'Schizaphis graminum',
+    severity: 'Low',
+    confidence: 0.824,
+    affectedAreaPct: 10,
+    managementAdvice:
+      'Green Bug aphid infestation at early stage. Yellowing and reddening of leaves at feeding sites is characteristic. Population is below economic threshold — scout closely over the next 7 days.',
+    actionSteps: [
+      'Monitor 30 tillers per field at weekly intervals.',
+      'Apply dimethoate 30 EC only if population exceeds 50–100 aphids per tiller.',
+      'Avoid excessive irrigation which promotes soft growth preferred by green bugs.',
+      'Record infestation level and upload follow-up image in 7 days.',
+    ],
+  },
+  Wheat_Blossom_Midge: {
+    scientificName: 'Sitodiplosis mosellana',
+    severity: 'Moderate',
+    confidence: 0.846,
+    affectedAreaPct: 20,
+    managementAdvice:
+      'Wheat Blossom Midge adult activity detected during heading. Females lay eggs inside spikelets and larvae feed on developing grains. Timing of spray is critical — must coincide with adult flight peak during crop heading.',
+    actionSteps: [
+      'Monitor adult emergence using yellow water traps — treat at 1 adult/trap/day.',
+      'Apply lambda-cyhalothrin or deltamethrin at early to mid-heading stage.',
+      'Target spraying in the evening when adults are most active.',
+      'Inspect harvested grain for orange larvae as a post-harvest assessment.',
+    ],
+  },
+  Wheat_Phloeothrips: {
+    scientificName: 'Haplothrips tritici',
+    severity: 'Low',
+    confidence: 0.809,
+    affectedAreaPct: 9,
+    managementAdvice:
+      'Wheat Phloeothrips (grain thrips) detected inside spikelets at heading. Direct feeding causes shrivelled grain and yield loss. Population is at low level — targeted intervention is sufficient.',
+    actionSteps: [
+      'Count thrips per ear at 10 random sites; treat if ≥10 thrips/ear.',
+      'Apply dimethoate 30 EC or spinosad during early heading.',
+      'Harvest on schedule — delayed harvesting increases thrips-related grain damage.',
+      'Record and document grain quality at harvest for comparison.',
+    ],
+  },
+  Wheat_Sawfly: {
+    scientificName: 'Cephus cinctus',
+    severity: 'Moderate',
+    confidence: 0.866,
+    affectedAreaPct: 19,
+    managementAdvice:
+      'Wheat Sawfly larval activity detected inside stems. Larvae cut the stem internally causing lodging and whiteheads. Solid-stemmed varieties resist infestation — note for varietal planning next season.',
+    actionSteps: [
+      'Inspect 25 stems per site for sawfly larvae by splitting the stem.',
+      'Apply pyrethroid insecticide at adult flight peak — monitor with yellow sticky traps.',
+      'Harvest on time before larvae complete development and cause full stem cutoff.',
+      'Plan to include solid-stemmed or tolerant varieties in next crop cycle.',
+    ],
+  },
+}
+
+/**
+ * Model D — Pest Detection (Demo Mode)
+ *
+ * Returns a deterministic, dataset-accurate pest detection result.
+ * The function is crop-aware: only pest classes from the detected crop
+ * are returned, matching the real ML model's per-crop scope.
+ *
+ * PRODUCTION INTEGRATION NOTE:
+ * Replace this entire function body with a single API call:
+ *   const response = await fetch(`/api/model-d/detect`, { method: 'POST', body: formData })
+ *   const raw = await response.json()
+ *   if (!validatePestClass(raw.pest_class)) { ... show fallback ... }
+ *   return buildPestResult(raw)
+ * The surrounding UI and result structure require no changes.
  *
  * @param {object} options
- * @param {string} [options.imageName]  - Uploaded image filename (used as seed for determinism)
- * @param {string} [options.fieldId]    - Optional field ID for context
+ * @param {string} [options.imageName]  - Uploaded image filename (seed for determinism)
+ * @param {string} [options.crop]       - Crop detected by Model A (e.g. "Paddy", "Corn")
  * @returns {PestDetectionResult}
  */
-export function generatePestDetectionResult({ imageName = '', fieldId = null } = {}) {
-  // Deterministic seed from image name (so same image always returns same result)
+export function generatePestDetectionResult({ imageName = '', crop = 'Paddy' } = {}) {
+  // Deterministic seed derived from the image filename.
+  // Same image → same result every time. No Math.random().
   let seed = 0
   for (let i = 0; i < imageName.length; i++) {
     seed = (seed * 31 + imageName.charCodeAt(i)) & 0xffff
   }
 
-  const pestScenarios = [
-    {
-      pestName: 'Stem Borer',
-      scientificName: 'Scirpophaga incertulas',
-      severity: 'Moderate',
-      confidence: 0.879,
-      affectedAreaPct: 22,
-      managementAdvice:
-        'Stem borer egg masses detected on leaf sheath. Larval tunneling can cause deadheart in vegetative stage. Apply recommended chlorantraniliprole-based granules at the base of tillers during early morning hours when dew is present.',
-      actionSteps: [
-        'Collect and destroy egg masses found on the underside of leaf sheaths.',
-        'Apply carbofuran 3G granules (10 kg/acre) or equivalent label-approved systemic insecticide.',
-        'Avoid flooding the field immediately after granule application to retain efficacy.',
-        'Schedule re-inspection in 5–7 days to verify larval control effectiveness.',
-        'Upload follow-up image capturing the affected stem cross-section for comparison.',
-      ],
-    },
-    {
-      pestName: 'Brown Planthopper',
-      scientificName: 'Nilaparvata lugens',
-      severity: 'High',
-      confidence: 0.931,
-      affectedAreaPct: 37,
-      managementAdvice:
-        'Brown planthopper population detected above economic threshold level. Hopperburn risk is elevated if the current humid microclimate persists. Avoid broadcasting pyrethroid insecticides which may suppress natural enemies and worsen the outbreak.',
-      actionSteps: [
-        'Drain standing water temporarily to disrupt nymphal microhabitat.',
-        'Apply buprofezin (Applaud) or pymetrozine (Chess) per label rate — avoid synthetic pyrethroids.',
-        'Check 20 random hill sites using a flashlight at night to estimate infestation density.',
-        'Remove weed hosts (Leersia spp.) along field bunds.',
-        'Inspect again in 4 days and upload follow-up photograph at canopy base level.',
-      ],
-    },
-    {
-      pestName: 'Whitefly',
-      scientificName: 'Bemisia tabaci',
-      severity: 'Low',
-      confidence: 0.843,
-      affectedAreaPct: 11,
-      managementAdvice:
-        'Early-stage whitefly nymph colonies identified under leaf surfaces. Population is currently below the economic injury level. Monitor closely as warm, dry conditions can cause rapid population increase within 7–10 days.',
-      actionSteps: [
-        'Tap plants early morning and count falling adults using a yellow sticky trap.',
-        'Apply neem oil (3 ml/litre) spray on the underside of leaves as a repellent.',
-        'Avoid excessive nitrogen application which promotes lush foliage preferred by whiteflies.',
-        'Record population density at next weekly monitoring cycle.',
-      ],
-    },
-    {
-      pestName: 'No Pest Detected',
-      scientificName: 'N/A',
-      severity: 'None',
-      confidence: 0.962,
-      affectedAreaPct: 0,
-      managementAdvice:
-        'Model D analysis indicates no significant pest presence in the submitted image. The visible canopy appears free from characteristic pest damage patterns including feeding holes, honeydew deposits, and egg masses. Continue standard weekly monitoring.',
-      actionSteps: [
-        'Maintain scheduled field monitoring as planned.',
-        'Ensure field boundary weeds are cleared to minimize pest harbour.',
-        'Record next monitoring observation on the scheduled date.',
-      ],
-    },
-    {
-      pestName: 'Aphid Colony',
-      scientificName: 'Rhopalosiphum maidis',
-      severity: 'Moderate',
-      confidence: 0.857,
-      affectedAreaPct: 17,
-      managementAdvice:
-        'Aphid colonies forming on new growth and tassels. Honeydew secretions observed indicating active feeding. Natural enemies (Coccinellids, lacewings) should be monitored before initiating chemical control.',
-      actionSteps: [
-        'Survey 30 random plants and count colonies; record whether natural enemies are present.',
-        'Apply imidacloprid seed treatment equivalent or dimethoate 30 EC if colony count exceeds threshold.',
-        'Avoid broad-spectrum insecticides during flowering to protect pollinators.',
-        'Upload a close-up image of the affected node region for clearer classification.',
-      ],
-    },
-  ]
+  // Get only the pest classes valid for the detected crop
+  const validClasses = getPestClassesForCrop(crop)
 
-  const scenario = pestScenarios[seed % pestScenarios.length]
-  return scenario
+  // If the crop is not in the supported set, return a clean no-detection state
+  if (!validClasses.length) {
+    return {
+      detected: false,
+      detections: [],
+      pestClassId: null,
+      pestName: null,
+      scientificName: null,
+      severity: null,
+      confidence: null,
+      affectedAreaPct: 0,
+      managementAdvice: 'The detected crop is not currently in the Model D dataset. Pest analysis is unavailable for this crop type.',
+      actionSteps: [],
+    }
+  }
+
+  // Pick a class deterministically from the crop-specific class list
+  const classId = validClasses[seed % validClasses.length]
+
+  // Validate against the centralized class list (guards against future config drift)
+  if (!validatePestClass(classId)) {
+    console.warn(`[Model D] Unexpected pest class encountered: "${classId}". Displaying fallback.`)
+    return {
+      detected: false,
+      detections: [],
+      pestClassId: null,
+      pestName: 'Unknown pest class',
+      scientificName: null,
+      severity: null,
+      confidence: null,
+      affectedAreaPct: 0,
+      managementAdvice: 'An unrecognised pest class was returned by the analysis engine. Please re-upload the image or contact support.',
+      actionSteps: [],
+    }
+  }
+
+  const advisory = PEST_ADVISORY[classId]
+
+  return {
+    // Result state — detected = true for any positive pest identification
+    detected: true,
+    detections: [{ pest_class: classId, confidence: advisory.confidence }],
+
+    // Display fields
+    pestClassId: classId,                    // exact dataset identifier — used for API calls
+    pestName: formatPestName(classId),       // human-readable display name
+    scientificName: advisory.scientificName,
+    severity: advisory.severity,
+    confidence: advisory.confidence,
+    affectedAreaPct: advisory.affectedAreaPct,
+    managementAdvice: advisory.managementAdvice,
+    actionSteps: advisory.actionSteps,
+  }
 }

@@ -75,7 +75,12 @@ export default function AIAnalysisPanel() {
     setTimeout(() => {
       setPipelineStep(5);
 
-      const pestResult = generatePestDetectionResult({ imageName: image?.name });
+      // Pass the detected crop so only dataset-valid classes for that crop are selected.
+      // When the real ML endpoint is connected, replace this call with the API response.
+      const pestResult = generatePestDetectionResult({
+        imageName: image?.name,
+        crop: "Paddy",   // Model A output — will be dynamic once Model A is wired
+      });
 
       setResult({
         crop: "Paddy",
@@ -643,7 +648,7 @@ export default function AIAnalysisPanel() {
                   </p>
 
                   <p className="text-xs text-gray-500">
-                    None / Stem Borer / Whitefly / Aphid / Brown Planthopper
+                    24 active classes across Corn, Cotton, Paddy &amp; Wheat
                   </p>
 
                 </div>
@@ -1015,22 +1020,54 @@ function RecommendationCard({
 ========================================================= */
 
 function PestDetectionResult({ pest }) {
-  const severityColors = {
-    None: "bg-green-100 text-green-700 border-green-200",
-    Low: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  // No-detection state — crop not in dataset or API returned no detections
+  if (!pest || !pest.detected) {
+    return (
+      <div className="bg-white rounded-2xl border border-amber-100 shadow-lg overflow-hidden">
+
+        <div className="px-6 py-5 border-b border-amber-100 flex items-center gap-3">
+
+          <div className="p-2 bg-amber-100 rounded-lg">
+            <Bug className="h-5 w-5 text-amber-700" />
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-amber-700">MODEL D</p>
+            <h2 className="font-bold text-gray-900">Pest Detection Result</h2>
+          </div>
+
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-100 rounded-xl">
+            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">No Visible Pest Detected</p>
+              <p className="text-sm text-gray-600 mt-0.5">
+                {pest?.managementAdvice || 'Model D found no significant pest activity in the submitted image. Continue standard weekly monitoring.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
+  // Severity display config
+  const severityTag = {
+    Low:      "bg-yellow-100 text-yellow-700 border-yellow-200",
     Moderate: "bg-orange-100 text-orange-700 border-orange-200",
-    High: "bg-red-100 text-red-700 border-red-200",
+    High:     "bg-red-100 text-red-700 border-red-200",
   };
-
-  const severityBg = {
-    None: "bg-green-50 border-green-100",
-    Low: "bg-yellow-50 border-yellow-100",
+  const severityCardBg = {
+    Low:      "bg-yellow-50 border-yellow-100",
     Moderate: "bg-orange-50 border-orange-100",
-    High: "bg-red-50 border-red-100",
+    High:     "bg-red-50 border-red-100",
   };
 
-  const tag = severityColors[pest.severity] || severityColors.Low;
-  const cardBg = severityBg[pest.severity] || severityBg.Low;
+  const tag    = severityTag[pest.severity]    || severityTag.Moderate;
+  const cardBg = severityCardBg[pest.severity] || severityCardBg.Moderate;
 
   return (
     <div className="bg-white rounded-2xl border border-amber-100 shadow-lg overflow-hidden">
@@ -1044,16 +1081,14 @@ function PestDetectionResult({ pest }) {
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <p className="text-xs font-semibold text-amber-700">MODEL D</p>
-            </div>
+            <p className="text-xs font-semibold text-amber-700">MODEL D</p>
             <h2 className="font-bold text-gray-900">Pest Detection Result</h2>
           </div>
 
         </div>
 
         <span className={`self-start md:self-auto px-3 py-1.5 rounded-xl text-xs font-semibold border ${tag}`}>
-          {pest.severity === "None" ? "No Pest Detected" : `${pest.severity} Infestation`}
+          {pest.severity} Infestation
         </span>
 
       </div>
@@ -1069,13 +1104,20 @@ function PestDetectionResult({ pest }) {
 
             <p className="text-xs text-gray-500 mb-1">Detected Pest</p>
 
+            {/* pestName is the human-readable form — pestClassId is the raw dataset identifier */}
             <p className="text-lg font-bold text-gray-900">
               {pest.pestName}
             </p>
 
-            <p className="text-xs text-gray-500 mt-1 italic">
-              {pest.scientificName}
+            <p className="text-xs text-gray-500 mt-0.5 font-mono">
+              {pest.pestClassId}
             </p>
+
+            {pest.scientificName && (
+              <p className="text-xs text-gray-400 mt-1 italic">
+                {pest.scientificName}
+              </p>
+            )}
 
           </div>
 
