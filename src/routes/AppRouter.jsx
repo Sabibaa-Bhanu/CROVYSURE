@@ -24,8 +24,11 @@ const PrivateRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--cs-paper)' }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent mx-auto mb-3" style={{ borderColor: '#1e4d38', borderTopColor: 'transparent' }} />
+          <p className="text-xs font-medium text-stone-600">Loading portal...</p>
+        </div>
       </div>
     )
   }

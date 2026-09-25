@@ -5,1092 +5,671 @@ import {
   Clock,
   AlertCircle,
   Search,
-  Filter,
   Download,
   Eye,
   User,
   MapPin,
   Calendar,
-  Image as ImageIcon,
   RotateCcw,
   ShieldCheck,
-  Brain,
   Leaf,
   Activity,
   FileCheck,
   X,
   MessageSquare,
-  Navigation,
-  UserCheck
+  ChevronRight,
+  ChevronDown,
+  TrendingUp,
+  AlertTriangle,
+  Info,
+  ArrowRight,
+  Droplets,
+  Thermometer,
+  Wind,
 } from 'lucide-react'
 
-const ApprovalWorkflow = () => {
-  const [validations, setValidations] = useState([
-    {
-      id: 1,
-      farmerName: 'Ramesh Patil',
-      farmerId: 'FARM-001',
-      fieldId: 'AG-001',
-      village: 'Shivaji Nagar',
-      crop: 'Paddy',
-      stage: 'Flowering',
-      disease: 'Bacterial Blight',
-      aiConfidence: 94,
-      cropConfidence: 97,
-      stageConfidence: 91,
-      diseaseConfidence: 89,
-      healthScore: 72,
-      imageQuality: 94,
-      status: 'pending',
-      source: 'Farmer App',
-      submittedBy: 'Ramesh Patil',
-      submissionDate: '16 Sep 2026',
-      captureDate: '16 Sep 2026',
-      latitude: '20.0059',
-      longitude: '73.7897',
-      locationMatch: true,
-      expertNote: '',
-      imageAvailable: true
-    },
-    {
-      id: 2,
-      farmerName: 'Suresh Yadav',
-      farmerId: 'FARM-002',
-      fieldId: 'AG-002',
-      village: 'Gandhi Gram',
-      crop: 'Paddy',
-      stage: 'Vegetative',
-      disease: 'Healthy',
-      aiConfidence: 91,
-      cropConfidence: 95,
-      stageConfidence: 88,
-      diseaseConfidence: 90,
-      healthScore: 88,
-      imageQuality: 92,
-      status: 'validated',
-      source: 'Field Official',
-      submittedBy: 'Priya Sharma',
-      submissionDate: '15 Sep 2026',
-      captureDate: '15 Sep 2026',
-      latitude: '20.0121',
-      longitude: '73.8012',
-      locationMatch: true,
-      expertNote: 'AI result matches field image.',
-      imageAvailable: true
-    },
-    {
-      id: 3,
-      farmerName: 'Anita Deshmukh',
-      farmerId: 'FARM-003',
-      fieldId: 'AG-003',
-      village: 'Mohan Nagar',
-      crop: 'Paddy',
-      stage: 'Maturity',
-      disease: 'Blast',
-      aiConfidence: 78,
-      cropConfidence: 93,
-      stageConfidence: 71,
-      diseaseConfidence: 76,
-      healthScore: 54,
-      imageQuality: 68,
-      status: 'needs_review',
-      source: 'Field Official',
-      submittedBy: 'Amit Singh',
-      submissionDate: '14 Sep 2026',
-      captureDate: '14 Sep 2026',
-      latitude: '19.9981',
-      longitude: '73.7764',
-      locationMatch: true,
-      expertNote: 'Disease symptoms require closer inspection.',
-      imageAvailable: true
-    },
-    {
-      id: 4,
-      farmerName: 'Vikram Jadhav',
-      farmerId: 'FARM-004',
-      fieldId: 'AG-004',
-      village: 'Kisan Colony',
-      crop: 'Paddy',
-      stage: 'Early',
-      disease: 'Healthy',
-      aiConfidence: 69,
-      cropConfidence: 82,
-      stageConfidence: 67,
-      diseaseConfidence: 61,
-      healthScore: 79,
-      imageQuality: 58,
-      status: 'rejected',
-      source: 'Farmer App',
-      submittedBy: 'Vikram Jadhav',
-      submissionDate: '13 Sep 2026',
-      captureDate: '13 Sep 2026',
-      latitude: '20.0213',
-      longitude: '73.8145',
-      locationMatch: false,
-      expertNote: 'Image quality insufficient for reliable validation.',
-      imageAvailable: true
-    }
-  ])
+// ── Data ──
+const INITIAL_VALIDATIONS = [
+  {
+    id: 1,
+    farmerName: 'Ramesh Patil',
+    farmerId: 'FARM-001',
+    fieldId: 'AG-001',
+    village: 'Shivaji Nagar',
+    taluka: 'Nashik',
+    crop: 'Paddy',
+    stage: 'Flowering',
+    disease: 'Bacterial Blight',
+    status: 'pending',
+    source: 'Farmer App',
+    submittedBy: 'Ramesh Patil',
+    submissionDate: '16 Sep 2026',
+    captureDate: '16 Sep 2026',
+    latitude: '20.0059',
+    longitude: '73.7897',
+    locationMatch: true,
+    expertNote: '',
+    imageAvailable: true,
+    imageUrl: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=600&auto=format&fit=crop&q=80',
+    // Assessment data
+    assessment: { label: 'Likely', confidence: 'Moderate', evidenceCount: 2, nearbyCases: 1 },
+    // Risk context
+    riskTrend: 'rising',
+    severityHistory: [8, 10, 14, 16, 18],
+    weatherContext: { humidity: '84%', temperature: '28°C', rainfall: 'Moderate expected', risk: 'Conditions support fungal spread' },
+    // Timeline
+    timeline: [
+      { date: '12 Sep 2026', event: 'First observation', detail: 'Mild leaf spots reported', type: 'observation' },
+      { date: '14 Sep 2026', event: 'Follow-up photo', detail: 'Symptom spread visible', type: 'observation' },
+      { date: '16 Sep 2026', event: 'Assessment ready', detail: 'Assessment: Bacterial Blight (Likely)', type: 'assessment' },
+      { date: '16 Sep 2026', event: 'Awaiting review', detail: 'Expert validation pending', type: 'pending' },
+    ],
+    caseNumber: 'CASE-1037',
+    firstDetected: '12 Sep 2026',
+    riskLevel: 'medium',
+  },
+  {
+    id: 2,
+    farmerName: 'Suresh Yadav',
+    farmerId: 'FARM-002',
+    fieldId: 'AG-002',
+    village: 'Gandhi Gram',
+    taluka: 'Dindori',
+    crop: 'Paddy',
+    stage: 'Vegetative',
+    disease: 'Healthy',
+    status: 'validated',
+    source: 'Field Official',
+    submittedBy: 'Priya Sharma',
+    submissionDate: '15 Sep 2026',
+    captureDate: '15 Sep 2026',
+    latitude: '20.0121',
+    longitude: '73.8012',
+    locationMatch: true,
+    expertNote: 'Assessment matches field image. No further action needed.',
+    imageAvailable: true,
+    imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop&q=80',
+    assessment: { label: 'Confirmed healthy', confidence: 'High', evidenceCount: 3, nearbyCases: 0 },
+    riskTrend: 'falling',
+    severityHistory: [12, 10, 8, 6, 5],
+    weatherContext: { humidity: '68%', temperature: '26°C', rainfall: 'Low', risk: 'Low risk conditions' },
+    timeline: [
+      { date: '8 Sep 2026', event: 'First observation', detail: 'Minor stress signs reported', type: 'observation' },
+      { date: '12 Sep 2026', event: 'Follow-up', detail: 'Stress recovering', type: 'observation' },
+      { date: '15 Sep 2026', event: 'Assessment ready', detail: 'Assessment: Healthy', type: 'assessment' },
+      { date: '15 Sep 2026', event: 'Expert confirmed', detail: 'Officer Priya Sharma validated', type: 'confirmed' },
+    ],
+    caseNumber: 'CASE-1033',
+    firstDetected: '8 Sep 2026',
+    riskLevel: 'low',
+  },
+  {
+    id: 3,
+    farmerName: 'Mahesh Shinde',
+    farmerId: 'FARM-003',
+    fieldId: 'AG-003',
+    village: 'Igatpuri',
+    taluka: 'Igatpuri',
+    crop: 'Cotton',
+    stage: 'Flowering',
+    disease: 'Pest / Disease Risk',
+    status: 'needs_review',
+    source: 'Field Official',
+    submittedBy: 'Amit Singh',
+    submissionDate: '14 Sep 2026',
+    captureDate: '14 Sep 2026',
+    latitude: '19.9981',
+    longitude: '73.7764',
+    locationMatch: true,
+    expertNote: 'Symptoms require closer inspection. Request additional photos.',
+    imageAvailable: true,
+    imageUrl: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&auto=format&fit=crop&q=80',
+    assessment: { label: 'Unclear', confidence: 'Low', evidenceCount: 1, nearbyCases: 2 },
+    riskTrend: 'rising',
+    severityHistory: [8, 14, 20, 28, 34],
+    weatherContext: { humidity: '78%', temperature: '31°C', rainfall: 'Dry spell', risk: 'Dry conditions favour pest multiplication' },
+    timeline: [
+      { date: '10 Sep 2026', event: 'First signal', detail: 'Cotton stress observed', type: 'observation' },
+      { date: '12 Sep 2026', event: 'Risk increasing', detail: 'Severity rising, nearby field also flagged', type: 'alert' },
+      { date: '14 Sep 2026', event: 'Assessment', detail: 'Assessment: Unclear — needs more evidence', type: 'assessment' },
+      { date: '14 Sep 2026', event: 'Review requested', detail: 'Expert asked for additional photos', type: 'review' },
+    ],
+    caseNumber: 'CASE-1042',
+    firstDetected: '10 Sep 2026',
+    riskLevel: 'high',
+  },
+  {
+    id: 4,
+    farmerName: 'Vikram Jadhav',
+    farmerId: 'FARM-004',
+    fieldId: 'AG-004',
+    village: 'Kisan Colony',
+    taluka: 'Yeola',
+    crop: 'Paddy',
+    stage: 'Early',
+    disease: 'Healthy',
+    status: 'rejected',
+    source: 'Farmer App',
+    submittedBy: 'Vikram Jadhav',
+    submissionDate: '13 Sep 2026',
+    captureDate: '13 Sep 2026',
+    latitude: '20.0213',
+    longitude: '73.8145',
+    locationMatch: false,
+    expertNote: 'Image quality insufficient. Location mismatch detected. Please resubmit with correct field photo.',
+    imageAvailable: true,
+    imageUrl: 'https://images.unsplash.com/photo-1536657464919-892534f60d6e?w=600&auto=format&fit=crop&q=80',
+    assessment: { label: 'Unable to assess', confidence: 'Very Low', evidenceCount: 1, nearbyCases: 0 },
+    riskTrend: 'stable',
+    severityHistory: [5, 5, 6, 5, 5],
+    weatherContext: { humidity: '70%', temperature: '27°C', rainfall: 'Normal', risk: 'No weather risk' },
+    timeline: [
+      { date: '13 Sep 2026', event: 'Submission received', detail: 'Low-quality image from farmer app', type: 'observation' },
+      { date: '13 Sep 2026', event: 'Rejected', detail: 'Location mismatch · image quality insufficient', type: 'rejected' },
+    ],
+    caseNumber: 'CASE-1031',
+    firstDetected: '13 Sep 2026',
+    riskLevel: 'low',
+  },
+]
 
+// ── Helper components ──
+const STATUS_CONFIG = {
+  pending: { label: 'Awaiting Review', cls: 'cs-badge cs-badge-blue', icon: Clock },
+  validated: { label: 'Confirmed', cls: 'cs-badge cs-badge-green', icon: CheckCircle },
+  needs_review: { label: 'More Evidence Needed', cls: 'cs-badge cs-badge-amber', icon: AlertCircle },
+  rejected: { label: 'Insufficient Data', cls: 'cs-badge cs-badge-neutral', icon: XCircle },
+}
+
+const TIMELINE_TYPE_STYLE = {
+  observation: { dot: 'bg-stone-400', line: 'text-stone-600' },
+  assessment: { dot: 'bg-blue-500', line: 'text-blue-700' },
+  pending: { dot: 'bg-amber-500', line: 'text-amber-700' },
+  confirmed: { dot: 'bg-emerald-600', line: 'text-emerald-700' },
+  alert: { dot: 'bg-red-500', line: 'text-red-700' },
+  review: { dot: 'bg-amber-500', line: 'text-amber-700' },
+  rejected: { dot: 'bg-stone-500', line: 'text-stone-600' },
+}
+
+function StatusBadge({ status }) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
+  return <span className={cfg.cls}>{cfg.label}</span>
+}
+
+function RiskBadge({ level }) {
+  if (level === 'high') return <span className="cs-badge cs-badge-red">High Risk</span>
+  if (level === 'medium') return <span className="cs-badge cs-badge-amber">Moderate Risk</span>
+  return <span className="cs-badge cs-badge-green">Low Risk</span>
+}
+
+function ConfidenceBar({ label }) {
+  const w = label === 'High' ? 85 : label === 'Moderate' ? 55 : label === 'Low' ? 30 : 15
+  const color = label === 'High' ? '#2d6a4f' : label === 'Moderate' ? '#d97706' : '#b91c1c'
+  return (
+    <div className="flex items-center gap-2 text-[10px]">
+      <div className="flex-1 h-1.5 rounded-full bg-stone-200">
+        <div className="h-1.5 rounded-full transition-all" style={{ width: `${w}%`, background: color }} />
+      </div>
+      <span className="font-semibold text-stone-700 w-16">{label}</span>
+    </div>
+  )
+}
+
+const FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'needs_review', label: 'More Evidence' },
+  { value: 'validated', label: 'Confirmed' },
+  { value: 'rejected', label: 'Rejected' },
+]
+
+const ApprovalWorkflow = () => {
+  const [validations, setValidations] = useState(INITIAL_VALIDATIONS)
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedValidation, setSelectedValidation] = useState(null)
-  const [showDetails, setShowDetails] = useState(false)
+  const [selectedCase, setSelectedCase] = useState(null)
+  const [expertNote, setExpertNote] = useState('')
+  const [actionTaken, setActionTaken] = useState(null)
 
-  const filters = [
-    {
-      value: 'all',
-      label: 'All',
-      count: validations.length
-    },
-    {
-      value: 'pending',
-      label: 'Pending Review',
-      count: validations.filter(v => v.status === 'pending').length
-    },
-    {
-      value: 'validated',
-      label: 'Validated',
-      count: validations.filter(v => v.status === 'validated').length
-    },
-    {
-      value: 'needs_review',
-      label: 'Needs Review',
-      count: validations.filter(v => v.status === 'needs_review').length
-    },
-    {
-      value: 'rejected',
-      label: 'Rejected',
-      count: validations.filter(v => v.status === 'rejected').length
-    }
-  ]
-
-  const filteredValidations = validations.filter(item => {
-    const matchesFilter =
-      filter === 'all' || item.status === filter
-
+  const filtered = validations.filter(item => {
+    const match = filter === 'all' || item.status === filter
     const search = searchTerm.toLowerCase()
-
-    const matchesSearch =
+    const matchSearch =
       item.farmerName.toLowerCase().includes(search) ||
-      item.farmerId.toLowerCase().includes(search) ||
-      item.fieldId.toLowerCase().includes(search) ||
       item.village.toLowerCase().includes(search) ||
       item.crop.toLowerCase().includes(search) ||
-      item.disease.toLowerCase().includes(search)
-
-    return matchesFilter && matchesSearch
+      item.disease.toLowerCase().includes(search) ||
+      item.caseNumber.toLowerCase().includes(search)
+    return match && matchSearch
   })
 
+  const openCase = (item) => {
+    setSelectedCase(item)
+    setExpertNote(item.expertNote || '')
+    setActionTaken(null)
+  }
+
   const updateStatus = (id, status) => {
-    setValidations(prev =>
-      prev.map(item =>
-        item.id === id
-          ? { ...item, status }
-          : item
-      )
-    )
-
-    if (selectedValidation?.id === id) {
-      setSelectedValidation(prev => ({
-        ...prev,
-        status
-      }))
-    }
+    setValidations(prev => prev.map(v => v.id === id ? { ...v, status, expertNote } : v))
+    setSelectedCase(prev => prev ? { ...prev, status, expertNote } : prev)
+    setActionTaken(status)
   }
 
-  const getStatusStyle = status => {
-    const styles = {
-      pending:
-        'bg-yellow-100 text-yellow-700 border-yellow-300',
-      validated:
-        'bg-green-100 text-green-700 border-green-300',
-      needs_review:
-        'bg-orange-100 text-orange-700 border-orange-300',
-      rejected:
-        'bg-red-100 text-red-700 border-red-300'
-    }
-
-    return styles[status] ||
-      'bg-gray-100 text-gray-700 border-gray-300'
-  }
-
-  const getStatusIcon = status => {
-    const icons = {
-      pending: Clock,
-      validated: CheckCircle,
-      needs_review: AlertCircle,
-      rejected: XCircle
-    }
-
-    const Icon = icons[status]
-
-    return Icon ? (
-      <Icon className="h-4 w-4" />
-    ) : null
-  }
-
-  const getStatusLabel = status => {
-    const labels = {
-      pending: 'Pending Review',
-      validated: 'Validated',
-      needs_review: 'Needs Review',
-      rejected: 'Rejected'
-    }
-
-    return labels[status] || status
-  }
-
-  const getConfidenceColor = confidence => {
-    if (confidence >= 90) return 'text-green-600'
-    if (confidence >= 80) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
-  const getHealthColor = score => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 60) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
-  const openDetails = item => {
-    setSelectedValidation(item)
-    setShowDetails(true)
-  }
-
-  const closeDetails = () => {
-    setShowDetails(false)
-    setSelectedValidation(null)
-  }
+  const counts = FILTERS.map(f => ({
+    ...f,
+    count: f.value === 'all' ? validations.length : validations.filter(v => v.status === f.value).length
+  }))
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col lg:flex-row gap-5 h-full">
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Expert Validation
-          </h1>
+      {/* ── LEFT: Case Queue ── */}
+      <div className={`${selectedCase ? 'lg:w-80 xl:w-96' : 'w-full'} flex flex-col gap-4`}>
 
-          <p className="text-gray-600">
-            Review and validate AI-generated crop health findings
-          </p>
-        </div>
-
-        <button
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-lg"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Export Validation Report
-        </button>
-      </div>
-
-      {/* Prototype Notice */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
-        <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5" />
-
-        <div>
-          <p className="font-semibold text-green-800">
-            Prototype Validation Mode
-          </p>
-
-          <p className="text-sm text-green-700 mt-1">
-            The records shown here are demonstration data.
-            Validation actions currently update the UI only and
-            are not connected to the backend.
-          </p>
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-green-100">
-          <div className="text-2xl font-bold text-gray-900">
-            {validations.length}
-          </div>
-          <div className="text-sm text-gray-600">
-            AI Findings
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 pb-4 border-b border-stone-200">
+          <div>
+            <span className="cs-badge cs-badge-olive mb-1">Field Validation</span>
+            <h1 className="text-xl font-bold text-stone-900">Expert Review</h1>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Review observations, assess evidence, and confirm or correct field assessments.
+            </p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-100">
-          <div className="text-2xl font-bold text-yellow-600">
-            {validations.filter(v => v.status === 'pending').length}
-          </div>
-          <div className="text-sm text-gray-600">
-            Pending Review
-          </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+          <input
+            type="text"
+            placeholder="Search case, village, crop, farmer..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-[11px] border border-stone-200 rounded bg-white focus:outline-none focus:border-stone-400"
+          />
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-orange-100">
-          <div className="text-2xl font-bold text-orange-600">
-            {validations.filter(v => v.status === 'needs_review').length}
-          </div>
-          <div className="text-sm text-gray-600">
-            Needs Review
-          </div>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-1.5">
+          {counts.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold rounded border transition-colors ${
+                filter === f.value ? 'text-white border-transparent' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
+              }`}
+              style={filter === f.value ? { background: 'var(--cs-green-800)', borderColor: 'var(--cs-green-800)' } : {}}
+            >
+              {f.label}
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${filter === f.value ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600'}`}>
+                {f.count}
+              </span>
+            </button>
+          ))}
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-green-100">
-          <div className="text-2xl font-bold text-green-600">
-            {validations.filter(v => v.status === 'validated').length}
-          </div>
-          <div className="text-sm text-gray-600">
-            Validated
-          </div>
-        </div>
-
-      </div>
-
-      {/* Search + Filters */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-green-100">
-
-        <div className="flex flex-col lg:flex-row gap-4">
-
-          <div className="flex-1">
-            <div className="relative">
-
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-
-              <input
-                type="text"
-                placeholder="Search farmer, field ID, village, crop or disease..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-
+        {/* Case list */}
+        <div className="rounded border border-stone-200 overflow-hidden" style={{ background: '#fff' }}>
+          {filtered.length === 0 ? (
+            <div className="py-10 text-center">
+              <FileCheck className="h-8 w-8 text-stone-300 mx-auto mb-2" />
+              <div className="text-sm font-medium text-stone-600">No cases awaiting review</div>
+              <div className="text-[10px] text-stone-400 mt-1">All monitored fields are currently stable.</div>
             </div>
-          </div>
+          ) : (
+            <div className="divide-y divide-stone-100">
+              {filtered.map(item => {
+                const isSelected = selectedCase?.id === item.id
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => openCase(item)}
+                    className={`
+                      p-3 cursor-pointer transition-colors
+                      border-l-2
+                      ${item.riskLevel === 'high' ? 'border-l-red-600' : item.riskLevel === 'medium' ? 'border-l-amber-500' : 'border-l-emerald-600'}
+                      ${isSelected ? 'bg-emerald-50/50' : 'hover:bg-stone-50'}
+                    `}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-stone-900">{item.village} · {item.crop}</span>
+                        </div>
+                        <div className="text-[10px] text-stone-500">{item.farmerName} · {item.stage}</div>
+                      </div>
+                      <StatusBadge status={item.status} />
+                    </div>
 
-          <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <div className="font-semibold text-stone-700">{item.disease}</div>
+                      <div className="text-stone-400 cs-mono">{item.caseNumber}</div>
+                    </div>
 
-            {filters.map(item => (
-              <button
-                key={item.value}
-                onClick={() => setFilter(item.value)}
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
-                  filter === item.value
-                    ? getStatusStyle(item.value)
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
-                }`}
-              >
-
-                {item.value !== 'all' && getStatusIcon(item.value)}
-
-                {item.value === 'all' && (
-                  <Filter className="h-4 w-4" />
-                )}
-
-                <span className="ml-2">
-                  {item.label}
-                </span>
-
-                <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                  {item.count}
-                </span>
-
-              </button>
-            ))}
-
-          </div>
-
+                    {item.status === 'pending' && (
+                      <div className="mt-1.5 text-[10px] text-amber-700 font-medium">
+                        Awaiting expert review · {item.submissionDate}
+                      </div>
+                    )}
+                    {item.status === 'needs_review' && (
+                      <div className="mt-1.5 text-[10px] text-amber-700 font-medium">
+                        More evidence requested · {item.submissionDate}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
+
       </div>
 
-      {/* Validation Cards */}
-      <div className="space-y-4">
+      {/* ── RIGHT: Field Case File ── */}
+      {selectedCase && (
+        <div className="flex-1 min-w-0">
+          <div className="rounded border border-stone-200 overflow-hidden cs-panel-enter" style={{ background: '#fff' }}>
 
-        {filteredValidations.map(item => (
+            {/* Case file header */}
+            <div className="cs-case-header px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-black tracking-widest uppercase text-stone-500">Field Case File</span>
+                    <span className="cs-mono text-[10px] text-stone-500">{selectedCase.caseNumber}</span>
+                  </div>
+                  <h2 className="text-lg font-bold text-stone-900">
+                    {selectedCase.village} / {selectedCase.crop} / {selectedCase.disease}
+                  </h2>
+                  <div className="flex items-center gap-3 mt-1 text-[10px] text-stone-500">
+                    <span><MapPin className="h-3 w-3 inline mr-0.5" />{selectedCase.taluka} Block</span>
+                    <span><User className="h-3 w-3 inline mr-0.5" />{selectedCase.farmerName}</span>
+                    <span><Calendar className="h-3 w-3 inline mr-0.5" />First detected: {selectedCase.firstDetected}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <StatusBadge status={selectedCase.status} />
+                  <RiskBadge level={selectedCase.riskLevel} />
+                  <button
+                    onClick={() => setSelectedCase(null)}
+                    className="text-stone-400 hover:text-stone-700 ml-1"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
-          <div
-            key={item.id}
-            className="bg-white rounded-2xl shadow-lg border border-green-100 overflow-hidden hover:shadow-xl transition-shadow"
-          >
+              {/* Summary row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-3 border-t border-stone-200 text-[10px]">
+                <div>
+                  <div className="text-stone-400">Current risk</div>
+                  <div className="font-bold text-stone-900 mt-0.5 text-[11px]">
+                    {selectedCase.riskLevel.toUpperCase()}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-stone-400">Evidence</div>
+                  <div className="font-bold text-stone-900 mt-0.5 text-[11px]">
+                    {selectedCase.assessment.evidenceCount} observations
+                  </div>
+                </div>
+                <div>
+                  <div className="text-stone-400">Last observed</div>
+                  <div className="font-bold text-stone-900 mt-0.5 text-[11px]">{selectedCase.submissionDate}</div>
+                </div>
+                <div>
+                  <div className="text-stone-400">Confirmation</div>
+                  <div className="font-bold text-stone-900 mt-0.5 text-[11px]">
+                    <StatusBadge status={selectedCase.status} />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <div className="p-6">
+            {/* Main case body */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-stone-200">
 
-              <div className="flex flex-col xl:flex-row gap-6">
+              {/* Column 1: Field image + evidence */}
+              <div className="p-4 space-y-4">
+                <div>
+                  <div className="text-[10px] font-black tracking-widest uppercase text-stone-500 mb-2">Field Image</div>
+                  {selectedCase.imageAvailable ? (
+                    <div className="relative rounded border border-stone-200 overflow-hidden">
+                      <img
+                        src={selectedCase.imageUrl}
+                        alt={`Field observation — ${selectedCase.village}`}
+                        className="w-full h-36 object-cover"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
+                        <div className="text-[9px] text-white font-medium">{selectedCase.captureDate} · {selectedCase.crop}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-36 bg-stone-100 rounded border border-stone-200 flex items-center justify-center text-stone-400 text-xs">
+                      No image available
+                    </div>
+                  )}
+                </div>
 
-                {/* Main Information */}
-                <div className="flex-1">
-
-                  {/* Status Row */}
-                  <div className="flex flex-wrap items-center gap-3 mb-5">
-
-                    <span
-                      className={`flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(item.status)}`}
-                    >
-                      {getStatusIcon(item.status)}
-
-                      <span className="ml-1">
-                        {getStatusLabel(item.status)}
+                {/* Assessment block */}
+                <div>
+                  <div className="text-[10px] font-black tracking-widest uppercase text-stone-500 mb-2">Assessment</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-stone-500">Current assessment</span>
+                      <span className="font-bold text-stone-900">
+                        {selectedCase.disease} — <span className="text-stone-600">{selectedCase.assessment.label}</span>
                       </span>
-                    </span>
-
-                    <span
-                      className={`flex items-center text-sm font-medium ${
-                        item.locationMatch
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      <Navigation className="h-4 w-4 mr-1" />
-
-                      {item.locationMatch
-                        ? 'Geo-location Matched'
-                        : 'Geo-location Mismatch'}
-                    </span>
-
-                    <span className="text-xs text-gray-500">
-                      Source: {item.source}
-                    </span>
-
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between text-[10px] mb-1">
+                        <span className="text-stone-500">Confidence</span>
+                      </div>
+                      <ConfidenceBar label={selectedCase.assessment.confidence} />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-stone-500">Observations</span>
+                      <span className="font-semibold text-stone-800">{selectedCase.assessment.evidenceCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-stone-500">Nearby confirmed cases</span>
+                      <span className={`font-semibold ${selectedCase.assessment.nearbyCases > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
+                        {selectedCase.assessment.nearbyCases}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-stone-500">Location verified</span>
+                      <span className={`font-semibold ${selectedCase.locationMatch ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {selectedCase.locationMatch ? 'Matches GPS' : 'Mismatch detected'}
+                      </span>
+                    </div>
                   </div>
+                </div>
 
-                  {/* Farmer / Field Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        Farmer
-                      </p>
-
-                      <p className="font-semibold text-gray-900">
-                        {item.farmerName}
-                      </p>
-
-                      <p className="text-xs text-gray-500">
-                        {item.farmerId}
-                      </p>
+                {/* Weather context */}
+                <div>
+                  <div className="text-[10px] font-black tracking-widest uppercase text-stone-500 mb-2">Weather Context</div>
+                  <div className="rounded border border-stone-200 p-2.5 space-y-1.5 text-[10px]">
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Humidity</span>
+                      <span className="font-semibold text-blue-700">{selectedCase.weatherContext.humidity}</span>
                     </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        Field
-                      </p>
-
-                      <p className="font-semibold text-gray-900">
-                        {item.fieldId}
-                      </p>
-
-                      <p className="text-xs text-gray-500">
-                        {item.village}
-                      </p>
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Temperature</span>
+                      <span className="font-semibold text-amber-700">{selectedCase.weatherContext.temperature}</span>
                     </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        Crop
-                      </p>
-
-                      <div className="flex items-center gap-2">
-                        <Leaf className="h-4 w-4 text-green-600" />
-
-                        <p className="font-semibold text-gray-900">
-                          {item.crop}
-                        </p>
-                      </div>
-
-                      <p className="text-xs text-gray-500">
-                        Stage: {item.stage}
-                      </p>
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Rainfall</span>
+                      <span className="font-semibold text-stone-700">{selectedCase.weatherContext.rainfall}</span>
                     </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        AI Detection
-                      </p>
-
-                      <p className="font-semibold text-gray-900">
-                        {item.disease}
-                      </p>
-
-                      <p
-                        className={`text-sm font-semibold ${getConfidenceColor(
-                          item.diseaseConfidence
-                        )}`}
-                      >
-                        {item.diseaseConfidence}% confidence
-                      </p>
-                    </div>
-
                   </div>
-
-                  {/* AI Pipeline */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-
-                      <div className="flex items-center gap-2 mb-2">
-                        <Brain className="h-4 w-4 text-green-600" />
-
-                        <span className="text-sm font-medium text-gray-700">
-                          Crop Classification
-                        </span>
-                      </div>
-
-                      <p className="font-semibold text-gray-900">
-                        {item.crop}
-                      </p>
-
-                      <p className={`text-sm font-semibold ${getConfidenceColor(item.cropConfidence)}`}>
-                        {item.cropConfidence}% confidence
-                      </p>
-
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-
-                      <div className="flex items-center gap-2 mb-2">
-                        <Activity className="h-4 w-4 text-blue-600" />
-
-                        <span className="text-sm font-medium text-gray-700">
-                          Growth Stage
-                        </span>
-                      </div>
-
-                      <p className="font-semibold text-gray-900">
-                        {item.stage}
-                      </p>
-
-                      <p className={`text-sm font-semibold ${getConfidenceColor(item.stageConfidence)}`}>
-                        {item.stageConfidence}% confidence
-                      </p>
-
-                    </div>
-
-                    <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
-
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle className="h-4 w-4 text-orange-600" />
-
-                        <span className="text-sm font-medium text-gray-700">
-                          Disease Detection
-                        </span>
-                      </div>
-
-                      <p className="font-semibold text-gray-900">
-                        {item.disease}
-                      </p>
-
-                      <p className={`text-sm font-semibold ${getConfidenceColor(item.diseaseConfidence)}`}>
-                        {item.diseaseConfidence}% confidence
-                      </p>
-
-                    </div>
-
+                  <div className="mt-2 p-2 rounded bg-stone-50 border border-stone-200 text-[10px] text-stone-600 italic">
+                    {selectedCase.weatherContext.risk}
                   </div>
+                </div>
+              </div>
 
-                  {/* Scores */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Column 2: Evidence trail + timeline */}
+              <div className="p-4">
+                <div className="text-[10px] font-black tracking-widest uppercase text-stone-500 mb-3">Field Health Timeline</div>
 
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-500">
-                          Overall AI Confidence
-                        </span>
-
-                        <span className={`font-semibold ${getConfidenceColor(item.aiConfidence)}`}>
-                          {item.aiConfidence}%
-                        </span>
-                      </div>
-
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="relative pl-6 space-y-0">
+                  {selectedCase.timeline.map((event, i) => {
+                    const style = TIMELINE_TYPE_STYLE[event.type] || TIMELINE_TYPE_STYLE.observation
+                    const isLast = i === selectedCase.timeline.length - 1
+                    return (
+                      <div key={i} className="relative pb-5 last:pb-0">
+                        {/* Vertical line */}
+                        {!isLast && (
+                          <div className="absolute left-[-15px] top-4 bottom-0 w-px bg-stone-200" />
+                        )}
+                        {/* Dot */}
                         <div
-                          className="h-full bg-green-500 rounded-full"
-                          style={{ width: `${item.aiConfidence}%` }}
+                          className={`absolute left-[-19px] top-1 w-3 h-3 rounded-full border-2 border-white ${style.dot}`}
                         />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-500">
-                          Crop Health
-                        </span>
-
-                        <span className={`font-semibold ${getHealthColor(item.healthScore)}`}>
-                          {item.healthScore}/100
-                        </span>
-                      </div>
-
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500 rounded-full"
-                          style={{ width: `${item.healthScore}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-500">
-                          Image Quality
-                        </span>
-
-                        <span className={`font-semibold ${getConfidenceColor(item.imageQuality)}`}>
-                          {item.imageQuality}/100
-                        </span>
-                      </div>
-
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-purple-500 rounded-full"
-                          style={{ width: `${item.imageQuality}%` }}
-                        />
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Review Warning */}
-                  {(item.status === 'needs_review' ||
-                    !item.locationMatch ||
-                    item.imageQuality < 70) && (
-
-                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-
-                      <div className="flex items-start gap-2">
-
-                        <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-
+                        {/* Content */}
                         <div>
-
-                          <p className="text-sm font-semibold text-yellow-800">
-                            Validation Attention Required
-                          </p>
-
-                          <p className="text-xs text-yellow-700 mt-1">
-                            Review image quality, AI confidence and
-                            geo-location evidence before validating
-                            this finding.
-                          </p>
-
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{event.date}</span>
+                          </div>
+                          <div className={`text-[11px] font-bold mt-0.5 ${style.line}`}>{event.event}</div>
+                          <div className="text-[10px] text-stone-500 mt-0.5">{event.detail}</div>
                         </div>
-
                       </div>
+                    )
+                  })}
+                </div>
 
+                {/* Why flagged */}
+                <div className="mt-5 pt-4 border-t border-stone-200">
+                  <div className="text-[10px] font-black tracking-widest uppercase text-stone-500 mb-2">Why this area is flagged</div>
+                  <div className="space-y-1.5 text-[11px] text-stone-700">
+                    {[
+                      selectedCase.assessment.evidenceCount > 1
+                        ? `${selectedCase.assessment.evidenceCount} observations recorded`
+                        : '1 observation — more evidence needed',
+                      selectedCase.riskTrend === 'rising'
+                        ? 'Severity is increasing across observation cycles'
+                        : 'Severity is stable or improving',
+                      selectedCase.assessment.nearbyCases > 0
+                        ? `${selectedCase.assessment.nearbyCases} nearby confirmed case(s) in this block`
+                        : 'No confirmed cases in immediate vicinity',
+                      !selectedCase.locationMatch
+                        ? 'Location mismatch — field identity needs verification'
+                        : 'Location verified against registered field coordinates',
+                    ].map((point, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
+                          i === 0 ? 'bg-blue-500' : i === 1 ? 'bg-amber-500' : i === 2 ? 'bg-red-500' : 'bg-stone-400'
+                        }`} />
+                        {point}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 3: Expert action panel */}
+              <div className="p-4 flex flex-col gap-4">
+                <div>
+                  <div className="text-[10px] font-black tracking-widest uppercase text-stone-500 mb-2">Expert Decision</div>
+
+                  {actionTaken && (
+                    <div className="mb-3 p-3 rounded border bg-emerald-50 border-emerald-200">
+                      <div className="text-[10px] font-bold text-emerald-800">
+                        {actionTaken === 'validated' ? 'Confirmed and recorded.' :
+                         actionTaken === 'needs_review' ? 'More evidence requested from farmer/officer.' :
+                         actionTaken === 'rejected' ? 'Submission rejected — resubmission requested.' :
+                         'Escalated to laboratory analysis.'}
+                      </div>
                     </div>
-
                   )}
 
+                  {/* Expert note */}
+                  <div className="mb-3">
+                    <label className="text-[10px] font-semibold text-stone-600 block mb-1">Expert observation note</label>
+                    <textarea
+                      value={expertNote}
+                      onChange={e => setExpertNote(e.target.value)}
+                      rows={3}
+                      placeholder="Add your observation, correction, or note..."
+                      className="w-full text-[11px] p-2.5 border border-stone-200 rounded resize-none focus:outline-none focus:border-stone-400 bg-white"
+                    />
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="space-y-2">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-stone-500 mb-1">Decision</div>
+
+                    <button
+                      onClick={() => updateStatus(selectedCase.id, 'validated')}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded border text-[11px] font-bold transition-colors"
+                      style={{
+                        background: selectedCase.status === 'validated' ? 'var(--cs-green-800)' : 'var(--cs-green-50)',
+                        color: selectedCase.status === 'validated' ? '#fff' : 'var(--cs-green-800)',
+                        borderColor: 'var(--cs-green-200)'
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Confirm assessment
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus(selectedCase.id, 'needs_review')}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded border border-amber-200 text-[11px] font-bold transition-colors"
+                      style={{
+                        background: selectedCase.status === 'needs_review' ? '#d97706' : '#fffbeb',
+                        color: selectedCase.status === 'needs_review' ? '#fff' : '#92400e',
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Request more evidence
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus(selectedCase.id, 'rejected')}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded border border-stone-200 text-stone-600 text-[11px] font-semibold hover:bg-stone-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <XCircle className="h-4 w-4" />
+                        Insufficient data — reject
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus(selectedCase.id, 'escalated')}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded border border-red-200 text-red-700 text-[11px] font-semibold hover:bg-red-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        Escalate to laboratory
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col gap-2 xl:w-48">
-
-                  <button
-                    onClick={() => updateStatus(item.id, 'validated')}
-                    className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-all font-medium"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Validate
-                  </button>
-
-                  <button
-                    onClick={() => updateStatus(item.id, 'needs_review')}
-                    className="flex items-center justify-center px-4 py-2 bg-white border border-orange-500 text-orange-600 text-sm rounded-lg hover:bg-orange-50 transition-all font-medium"
-                  >
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    Needs Review
-                  </button>
-
-                  <button
-                    onClick={() => updateStatus(item.id, 'rejected')}
-                    className="flex items-center justify-center px-4 py-2 bg-white border border-red-500 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-all font-medium"
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject Finding
-                  </button>
-
-                  <button
-                    onClick={() => updateStatus(item.id, 'pending')}
-                    className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:border-green-500 hover:text-green-600 transition-all font-medium"
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Reset Review
-                  </button>
-
-                  <button
-                    onClick={() => openDetails(item)}
-                    className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:border-green-500 hover:text-green-600 transition-all font-medium"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Evidence
-                  </button>
-
+                {/* Uncertainty statement */}
+                <div className="mt-auto pt-4 border-t border-stone-200">
+                  <div className="p-2.5 rounded bg-stone-50 border border-stone-200 text-[10px] text-stone-600 leading-relaxed">
+                    <Info className="h-3 w-3 inline mr-1 text-stone-400" />
+                    The system provides an initial assessment based on available observations and weather data.
+                    Expert confirmation transforms this into a verified case that informs district-level action.
+                  </div>
                 </div>
-
-              </div>
-
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-3 bg-green-50 border-t border-green-100 flex flex-col sm:flex-row justify-between gap-2">
-
-              <div className="flex items-center gap-4 text-xs text-gray-600">
-
-                <span className="flex items-center">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Captured: {item.captureDate}
-                </span>
-
-                <span className="flex items-center">
-                  <UserCheck className="h-3 w-3 mr-1" />
-                  Uploaded by: {item.submittedBy}
-                </span>
-
-              </div>
-
-              <div className="text-xs text-gray-500">
-                Field: {item.fieldId}
               </div>
 
             </div>
 
           </div>
-
-        ))}
-
-      </div>
-
-      {/* Empty State */}
-      {filteredValidations.length === 0 && (
-        <div className="bg-white rounded-2xl p-12 text-center border border-green-100">
-
-          <FileCheck className="h-12 w-12 text-green-400 mx-auto mb-4" />
-
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No validation records found
-          </h3>
-
-          <p className="text-gray-600">
-            Try adjusting your search or validation filter.
-          </p>
-
         </div>
-      )}
-
-      {/* Evidence Modal */}
-      {showDetails && selectedValidation && (
-
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Validation Evidence
-                </h2>
-
-                <p className="text-sm text-gray-500">
-                  {selectedValidation.farmerName} • {selectedValidation.fieldId}
-                </p>
-              </div>
-
-              <button
-                onClick={closeDetails}
-                className="p-2 rounded-lg hover:bg-gray-100"
-              >
-                <X className="h-5 w-5 text-gray-600" />
-              </button>
-
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto max-h-[75vh]">
-
-              {/* Demo Notice */}
-              <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-4">
-
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-green-600" />
-
-                  <p className="font-semibold text-green-800">
-                    Evidence Review — Prototype Mode
-                  </p>
-                </div>
-
-                <p className="text-sm text-green-700 mt-1">
-                  Images and validation information shown here
-                  are demonstration data.
-                </p>
-
-              </div>
-
-              {/* Image Comparison */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                <div className="border border-gray-200 rounded-xl p-4">
-
-                  <div className="flex items-center gap-2 mb-3">
-
-                    <User className="h-5 w-5 text-green-600" />
-
-                    <h3 className="font-semibold text-gray-900">
-                      Submitted Crop Image
-                    </h3>
-
-                  </div>
-
-                  <div className="h-64 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
-
-                    {selectedValidation.imageAvailable ? (
-                      <>
-                        <ImageIcon className="h-12 w-12 text-green-500 mb-3" />
-
-                        <p className="text-sm font-medium text-green-700">
-                          Crop Image Available
-                        </p>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                          Geo-tagged image
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="h-12 w-12 text-gray-400 mb-3" />
-
-                        <p className="text-sm text-gray-500">
-                          No image available
-                        </p>
-                      </>
-                    )}
-
-                  </div>
-
-                  <div className="mt-3 text-xs text-gray-500">
-                    Source: {selectedValidation.source}
-                  </div>
-
-                </div>
-
-                {/* AI Result */}
-                <div className="border border-green-200 rounded-xl p-4 bg-green-50/40">
-
-                  <div className="flex items-center gap-2 mb-4">
-
-                    <Brain className="h-5 w-5 text-green-600" />
-
-                    <h3 className="font-semibold text-gray-900">
-                      AI Analysis
-                    </h3>
-
-                  </div>
-
-                  <div className="space-y-3">
-
-                    <div className="bg-white rounded-lg p-3">
-                      <p className="text-xs text-gray-500">
-                        Crop
-                      </p>
-                      <p className="font-semibold">
-                        {selectedValidation.crop}
-                      </p>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-3">
-                      <p className="text-xs text-gray-500">
-                        Growth Stage
-                      </p>
-                      <p className="font-semibold">
-                        {selectedValidation.stage}
-                      </p>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-3">
-                      <p className="text-xs text-gray-500">
-                        Disease
-                      </p>
-                      <p className="font-semibold">
-                        {selectedValidation.disease}
-                      </p>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-3">
-                      <p className="text-xs text-gray-500">
-                        Overall AI Confidence
-                      </p>
-                      <p className={`font-bold ${getConfidenceColor(selectedValidation.aiConfidence)}`}>
-                        {selectedValidation.aiConfidence}%
-                      </p>
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Location Evidence */}
-              <div className="mt-5 border border-gray-200 rounded-xl p-5">
-
-                <div className="flex items-center gap-2 mb-4">
-
-                  <MapPin className="h-5 w-5 text-green-600" />
-
-                  <h3 className="font-semibold text-gray-900">
-                    Geo-location Evidence
-                  </h3>
-
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                  <div>
-                    <p className="text-xs text-gray-500">
-                      Latitude
-                    </p>
-
-                    <p className="font-medium">
-                      {selectedValidation.latitude}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">
-                      Longitude
-                    </p>
-
-                    <p className="font-medium">
-                      {selectedValidation.longitude}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">
-                      Location Status
-                    </p>
-
-                    <p
-                      className={`font-semibold ${
-                        selectedValidation.locationMatch
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      {selectedValidation.locationMatch
-                        ? 'Matched'
-                        : 'Mismatch'}
-                    </p>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Validation Information */}
-              <div className="mt-5 border border-gray-200 rounded-xl p-5">
-
-                <div className="flex items-center gap-2 mb-4">
-
-                  <MessageSquare className="h-5 w-5 text-green-600" />
-
-                  <h3 className="font-semibold text-gray-900">
-                    Validation Information
-                  </h3>
-
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                  <div>
-                    <p className="text-xs text-gray-500">
-                      Current Status
-                    </p>
-
-                    <span
-                      className={`inline-flex items-center mt-1 px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
-                        selectedValidation.status
-                      )}`}
-                    >
-                      {getStatusLabel(selectedValidation.status)}
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500">
-                      Uploaded By
-                    </p>
-
-                    <p className="font-medium mt-1">
-                      {selectedValidation.submittedBy}
-                    </p>
-                  </div>
-
-                </div>
-
-                <div className="mt-4 bg-gray-50 rounded-lg p-4">
-
-                  <p className="text-xs text-gray-500 mb-1">
-                    Existing Expert Note
-                  </p>
-
-                  <p className="text-sm text-gray-700">
-                    {selectedValidation.expertNote ||
-                      'No expert note added yet.'}
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* Modal Actions */}
-              <div className="mt-5 flex flex-wrap gap-3 justify-end">
-
-                <button
-                  onClick={() =>
-                    updateStatus(
-                      selectedValidation.id,
-                      'rejected'
-                    )
-                  }
-                  className="flex items-center px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 font-medium"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject Finding
-                </button>
-
-                <button
-                  onClick={() =>
-                    updateStatus(
-                      selectedValidation.id,
-                      'needs_review'
-                    )
-                  }
-                  className="flex items-center px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 font-medium"
-                >
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Needs Review
-                </button>
-
-                <button
-                  onClick={() =>
-                    updateStatus(
-                      selectedValidation.id,
-                      'validated'
-                    )
-                  }
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Validate Finding
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
       )}
 
     </div>

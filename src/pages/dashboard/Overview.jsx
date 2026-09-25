@@ -1,179 +1,206 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Shield,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ArrowRight,
   AlertTriangle,
-  CheckCircle,
+  CheckCircle2,
+  Clock,
+  ClipboardCheck,
   MapPin,
-  Calendar,
+  Activity,
   RefreshCw,
   Download,
+  ChevronRight,
   Sprout,
-  Activity,
-  ClipboardCheck,
   CloudSun,
-  TrendingUp,
-  ArrowRight,
-  CheckCircle2,
+  Eye,
+  MoreHorizontal,
 } from 'lucide-react'
 import { DEFAULT_FIELDS } from '../../services/cropIntelligence'
 
-const mockData = {
-  stats: {
-    registeredFarmers: 1247,
-    farmersChange: 5.2,
-    imagesAnalyzed: 894,
-    imagesChange: 12.8,
-    diseaseCases: 126,
-    diseaseChange: 8.3,
-    highRiskFields: 18,
-    riskChange: -4.2,
-    pendingValidation: 8,
-    activeAlerts: 12,
-    fieldsMonitored: 486,
-    coverageArea: 78.3,
-    aiAccuracy: 94.7,
-    completedVisits: 156,
+// ---- Demo data (clearly isolated from production) ----
+const DEMO_RISK_MOVEMENT = [
+  { label: 'Cotton disease signals', change: +18, trend: 'rising', crop: 'Cotton', villages: 4 },
+  { label: 'Pest observations', change: +11, trend: 'rising', crop: 'Paddy/Cotton', villages: 3 },
+  { label: 'Emerging clusters', change: +3, trend: 'rising', crop: 'Multiple', villages: 3 },
+  { label: 'Confirmed this week', change: +2, trend: 'stable', crop: 'Cotton', villages: 2 },
+  { label: 'Resolved cases', change: +5, trend: 'falling', crop: 'Soybean', villages: 5 },
+  { label: 'Monitoring coverage', change: -2, trend: 'falling', crop: 'All', villages: null },
+]
+
+const DEMO_ATTENTION_AREAS = [
+  {
+    id: 'AG-003',
+    village: 'Igatpuri',
+    taluka: 'Igatpuri',
+    crop: 'Cotton',
+    signal: 'Pest / Disease Risk',
+    trend: 'rising',
+    riskLevel: 'high',
+    lastObservation: '3 days ago',
+    confirmationStatus: 'Expert review pending',
+    action: 'Field inspection',
+    changeText: '+14% severity',
+    caseNumber: 'CASE-1042',
   },
-  recentActivity: [
-    {
-      id: 1,
-      type: 'followup',
-      title: 'Weekly observation submitted — North Field',
-      description: 'Leaf Blast severity updated: 12% → 18% (Cycle Week 3)',
-      time: '14 minutes ago',
-      status: 'warning',
-      actionRoute: '/dashboard/follow-up'
-    },
-    {
-      id: 2,
-      type: 'risk',
-      title: 'Risk forecast updated for Sinnar Sector',
-      description: 'Bacterial Blight risk shifted to HIGH due to dry spell',
-      time: '38 minutes ago',
-      status: 'error',
-      actionRoute: '/dashboard/risk'
-    },
-    {
-      id: 3,
-      type: 'validation',
-      title: 'Expert validation completed',
-      description: 'Officer Rajesh Kumar verified 6 Paddy foliar cases',
-      time: '1 hour ago',
-      status: 'operational',
-      actionRoute: '/dashboard/approvals'
-    },
-    {
-      id: 4,
-      type: 'observation',
-      title: 'Soybean observation recorded — Dindori',
-      description: 'JS-335 plot in clean vegetative recovery phase',
-      time: '2.5 hours ago',
-      status: 'operational',
-      actionRoute: '/dashboard/growth'
-    },
-    {
-      id: 5,
-      type: 'alert',
-      title: 'Stem Borer threshold advisory issued',
-      description: 'Advisory sent to 24 registered farmers in Niphad Block',
-      time: '4 hours ago',
-      status: 'warning',
-      actionRoute: '/dashboard/alerts'
-    }
-  ],
-  systemStatus: {
-    aiAnalysis: {
-      status: 'operational',
-      latency: '118ms',
-    },
-    imageProcessing: {
-      status: 'operational',
-      queue: 6,
-    },
-    dataSync: {
-      status: 'operational',
-      lastSync: '1 min ago',
-    },
-    apiHealth: {
-      status: 'operational',
-      uptime: '99.9%',
-    },
+  {
+    id: 'AG-006',
+    village: 'Niphad',
+    taluka: 'Niphad',
+    crop: 'Paddy',
+    signal: 'Leaf Blast',
+    trend: 'rising',
+    riskLevel: 'high',
+    lastObservation: '5 days ago',
+    confirmationStatus: 'New signal',
+    action: 'Expert review',
+    changeText: '+8% severity',
+    caseNumber: 'CASE-1039',
   },
+  {
+    id: 'AG-002',
+    village: 'Dindori',
+    taluka: 'Dindori',
+    crop: 'Paddy',
+    signal: 'Bacterial Blight',
+    trend: 'stable',
+    riskLevel: 'medium',
+    lastObservation: '2 days ago',
+    confirmationStatus: 'Under review',
+    action: 'Monitor closely',
+    changeText: 'Stable',
+    caseNumber: 'CASE-1037',
+  },
+  {
+    id: 'AG-005',
+    village: 'Sinnar',
+    taluka: 'Sinnar',
+    crop: 'Corn',
+    signal: 'Disease risk signals',
+    trend: 'stable',
+    riskLevel: 'medium',
+    lastObservation: '4 days ago',
+    confirmationStatus: 'Validation needed',
+    action: 'Assign officer',
+    changeText: 'Stable',
+    caseNumber: 'CASE-1035',
+  },
+  {
+    id: 'AG-001',
+    village: 'Nashik Rural',
+    taluka: 'Nashik',
+    crop: 'Paddy',
+    signal: 'Healthy',
+    trend: 'falling',
+    riskLevel: 'low',
+    lastObservation: '1 day ago',
+    confirmationStatus: 'Validated',
+    action: 'Routine follow-up',
+    changeText: 'Improving',
+    caseNumber: 'CASE-1030',
+  },
+]
+
+const DEMO_ACTION_QUEUE = [
+  { id: 1, priority: 'critical', type: 'Field inspection needed', location: 'Igatpuri — Cotton', reason: 'Pest cluster confirmed by 2 observations, no officer visit yet', due: 'Today', status: 'overdue', route: '/dashboard/alerts' },
+  { id: 2, priority: 'high', type: 'Expert review', location: 'Niphad — Paddy', reason: '3 cases awaiting expert validation', due: 'Tomorrow', status: 'pending', route: '/dashboard/approvals' },
+  { id: 3, priority: 'high', type: 'Field inspection needed', location: 'Sinnar — Cotton', reason: 'Risk shifted to HIGH, 5+ days since last visit', due: 'Tomorrow', status: 'pending', route: '/dashboard/alerts' },
+  { id: 4, priority: 'medium', type: 'Follow-up monitoring', location: 'North Field — Paddy', reason: 'Weekly observation due, severity increasing', due: '2 days', status: 'pending', route: '/dashboard/follow-up' },
+  { id: 5, priority: 'medium', type: 'Advisory dispatch', location: 'Niphad Block', reason: 'Stem Borer advisory to be sent to 24 registered farmers', due: '3 days', status: 'pending', route: '/dashboard/reports' },
+]
+
+const DEMO_CASE_STATUS_COUNTS = {
+  newSignal: 4,
+  underReview: 6,
+  expertValidation: 8,
+  fieldVisitRequired: 3,
+  confirmed: 12,
+  actionAdvised: 5,
+  followUpRequired: 7,
+  resolved: 89,
 }
 
-const StatusIndicator = ({ status }) => {
-  const config = {
-    operational: {
-      color: 'text-emerald-800 bg-emerald-50 border-emerald-200',
-      dot: 'bg-emerald-600',
-      label: 'Normal',
-    },
-    warning: {
-      color: 'text-amber-800 bg-amber-50 border-amber-200',
-      dot: 'bg-amber-600',
-      label: 'Watch',
-    },
-    error: {
-      color: 'text-red-800 bg-red-50 border-red-200',
-      dot: 'bg-red-600',
-      label: 'High Risk',
-    },
-  }
-
-  const item = config[status] || config.operational
-
+// ---- Reusable Components ----
+function TrendBadge({ trend }) {
+  if (trend === 'rising') return (
+    <span className="flex items-center gap-1 text-[10px] font-bold trend-rising">
+      <TrendingUp className="h-3 w-3" /> Rising
+    </span>
+  )
+  if (trend === 'falling') return (
+    <span className="flex items-center gap-1 text-[10px] font-bold trend-falling">
+      <TrendingDown className="h-3 w-3" /> Improving
+    </span>
+  )
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold border ${item.color}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
-      {item.label}
+    <span className="flex items-center gap-1 text-[10px] font-semibold trend-stable">
+      <Minus className="h-3 w-3" /> Stable
     </span>
   )
 }
 
+function RiskDot({ level }) {
+  const cls = level === 'high' ? 'risk-dot-high' : level === 'medium' ? 'risk-dot-medium' : 'risk-dot-low'
+  return <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${cls}`} />
+}
+
+function SituationBadge({ status }) {
+  const map = {
+    'new signal': 'cs-badge cs-badge-blue',
+    'expert review pending': 'cs-badge cs-badge-amber',
+    'under review': 'cs-badge cs-badge-amber',
+    'validated': 'cs-badge cs-badge-green',
+    'validation needed': 'cs-badge cs-badge-amber',
+    'confirmed': 'cs-badge cs-badge-red',
+  }
+  const cls = map[status.toLowerCase()] || 'cs-badge cs-badge-neutral'
+  return <span className={cls}>{status}</span>
+}
+
+function MiniSparkline({ values = [3, 5, 8, 12, 18], color = '#b91c1c' }) {
+  const max = Math.max(...values)
+  return (
+    <div className="flex items-end gap-[2px]" style={{ height: 18, width: 36 }}>
+      {values.map((v, i) => (
+        <div
+          key={i}
+          style={{
+            height: `${(v / max) * 100}%`,
+            width: 4,
+            background: i === values.length - 1 ? color : `${color}55`,
+            borderRadius: 1,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ---- Main Page ----
 const Overview = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({})
-  const [recentActivity, setRecentActivity] = useState([])
-  const [systemStatus, setSystemStatus] = useState({})
-  const [reportExported, setReportExported] = useState(false)
-
-  // Primary active field for highlighted surveillance
+  const [timeWindow, setTimeWindow] = useState('7d')
+  const [selectedArea, setSelectedArea] = useState(null)
   const primaryField = DEFAULT_FIELDS[0]
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStats(mockData.stats)
-      setRecentActivity(mockData.recentActivity)
-      setSystemStatus(mockData.systemStatus)
-      setLoading(false)
-    }, 300)
-
-    return () => clearTimeout(timer)
+    const t = setTimeout(() => setLoading(false), 280)
+    return () => clearTimeout(t)
   }, [])
-
-  const refreshData = () => {
-    setLoading(true)
-    setTimeout(() => {
-      setStats(mockData.stats)
-      setRecentActivity(mockData.recentActivity)
-      setSystemStatus(mockData.systemStatus)
-      setLoading(false)
-    }, 400)
-  }
-
-  const exportReport = () => {
-    setReportExported(true)
-    setTimeout(() => setReportExported(false), 3500)
-  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-800 border-t-transparent mx-auto mb-3" />
-          <p className="text-sm font-medium text-stone-700">Loading district crop surveillance data...</p>
+          <div
+            className="animate-spin rounded-full h-7 w-7 border-2 border-t-transparent mx-auto mb-3"
+            style={{ borderColor: 'var(--cs-green-800)', borderTopColor: 'transparent' }}
+          />
+          <p className="text-sm font-medium text-stone-600">Loading district situation...</p>
         </div>
       </div>
     )
@@ -181,467 +208,419 @@ const Overview = () => {
 
   return (
     <div className="space-y-6">
-      {/* District & Command Bar Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-stone-200">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-stone-200">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold tracking-wider text-emerald-800 uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              District Agricultural Surveillance
-            </span>
-            <span className="text-xs text-stone-500">Nashik Command Zone</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="cs-badge cs-badge-green">District Agricultural Surveillance</span>
+            <span className="text-[10px] text-stone-500">Nashik Command Zone</span>
           </div>
-          <h1 className="text-2xl font-bold text-stone-900 mt-1">
-            Crop Health & Risk Overview
-          </h1>
-          <p className="text-xs text-stone-600 mt-0.5">
-            Real-time monitoring across 486 registered field plots and weekly sequential farmer observations.
+          <h1 className="text-xl font-bold text-stone-900">Field Situation</h1>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Monitoring emerging crop disease and pest risk across monitored fields.
+            <span className="ml-2 text-stone-400">Last updated: 08:41 today</span>
           </p>
         </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={refreshData}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-300 text-stone-700 text-xs font-semibold rounded-md hover:bg-stone-50 hover:text-stone-900 transition-colors"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </button>
-
-          <button
-            onClick={exportReport}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 text-white text-xs font-semibold rounded-md hover:bg-emerald-900 transition-colors shadow-xs"
-          >
-            <Download className="h-3.5 w-3.5" />
-            {reportExported ? 'Report Downloaded' : 'Export District Summary'}
-          </button>
-        </div>
-      </div>
-
-      {reportExported && (
-        <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-lg text-xs font-medium text-emerald-900 flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-          Weekly district crop risk assessment exported as CSV / PDF bundle.
-        </div>
-      )}
-
-      {/* PRIORITY SECTION: Current Crop / Field Surveillance Spotlight */}
-      <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-xs">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-stone-200">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                Current Field Under Observation
-              </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                Moderate Risk Level
-              </span>
-            </div>
-            <h2 className="text-lg font-bold text-stone-900 mt-1">
-              {primaryField.name} — {primaryField.crop} ({primaryField.variety})
-            </h2>
-            <p className="text-xs text-stone-500">
-              Farmer: <strong className="text-stone-800">{primaryField.farmerName}</strong> • {primaryField.village} • Stage: <strong className="text-stone-800">{primaryField.growthStage}</strong>
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={() => navigate('/dashboard/risk')}
-              className="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold rounded-md flex items-center gap-1.5 transition-colors shadow-xs"
-            >
-              <CloudSun className="h-4 w-4" />
-              Open Risk Forecast
-            </button>
-            <button
-              onClick={() => navigate('/dashboard/follow-up')}
-              className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-colors"
-            >
-              <Activity className="h-4 w-4 text-emerald-800" />
-              Follow-up Monitoring
-            </button>
-          </div>
-        </div>
-
-        {/* Dense Field Indicators */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 text-xs">
-          <div className="p-3 bg-stone-50 rounded border border-stone-200">
-            <span className="text-stone-500 block text-[11px]">Current Crop Health</span>
-            <span className="text-stone-900 font-bold text-sm mt-0.5 block">
-              {primaryField.currentHealth}
-            </span>
-            <span className="text-[11px] text-amber-700 font-medium">Needs Attention</span>
-          </div>
-
-          <div className="p-3 bg-stone-50 rounded border border-stone-200">
-            <span className="text-stone-500 block text-[11px]">Active Pathology</span>
-            <span className="text-stone-900 font-bold text-sm mt-0.5 block truncate">
-              Leaf Blast
-            </span>
-            <span className="text-[11px] text-stone-500">Severity: 18%</span>
-          </div>
-
-          <div className="p-3 bg-stone-50 rounded border border-stone-200">
-            <span className="text-stone-500 block text-[11px]">What Changed</span>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className="text-stone-900 font-bold text-sm">12% → 18%</span>
-              <span className="text-red-700 font-bold text-[11px] flex items-center">
-                <TrendingUp className="h-3 w-3" /> +6%
-              </span>
-            </div>
-            <span className="text-[11px] text-stone-500">Since 11 Sep observation</span>
-          </div>
-
-          <div className="p-3 bg-stone-50 rounded border border-stone-200">
-            <span className="text-stone-500 block text-[11px]">Risk Forecast</span>
-            <span className="text-amber-800 font-bold text-sm mt-0.5 block">
-              MODERATE (7-Day)
-            </span>
-            <span className="text-[11px] text-stone-500">High humidity driver</span>
-          </div>
-
-          <div className="p-3 bg-stone-50 rounded border border-stone-200">
-            <span className="text-stone-500 block text-[11px]">Next Field Follow-up</span>
-            <span className="text-stone-900 font-bold text-sm mt-0.5 block">
-              23 Sep 2026
-            </span>
-            <span className="text-[11px] text-emerald-800 font-semibold">Inspection Due</span>
-          </div>
-
-          <div className="p-3 bg-stone-50 rounded border border-stone-200">
-            <span className="text-stone-500 block text-[11px]">Surveillance History</span>
-            <span className="text-stone-900 font-bold text-sm mt-0.5 block">
-              3 Weeks Logged
-            </span>
-            <span className="text-[11px] text-stone-500">Weekly photos on file</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Primary District Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Registered Farmers</span>
-            <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-              +{stats.farmersChange}%
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-stone-900 mt-2">{stats.registeredFarmers}</p>
-          <p className="text-xs text-stone-500 mt-1">Across 14 block subdivisions</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Images Analyzed</span>
-            <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-              +{stats.imagesChange}%
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-stone-900 mt-2">{stats.imagesAnalyzed}</p>
-          <p className="text-xs text-stone-500 mt-1">Weekly canopy photos uploaded</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Active Disease Cases</span>
-            <span className="text-xs text-red-700 font-bold bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
-              +{stats.diseaseChange}%
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-stone-900 mt-2">{stats.diseaseCases}</p>
-          <p className="text-xs text-stone-500 mt-1">Under protocol-based treatment</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">High-Risk Plots</span>
-            <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-              {stats.riskChange}%
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-red-700 mt-2">{stats.highRiskFields}</p>
-          <p className="text-xs text-stone-500 mt-1">Urgent follow-up inspection required</p>
-        </div>
-      </div>
-
-      {/* Main Operations Grid: Quick Actions / Activity Feed / System Telemetry */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Box 1: Operational Modules & Direct Actions */}
-        <div className="bg-white rounded-lg border border-stone-200 p-5 shadow-xs flex flex-col h-[28rem]">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-            <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
-              <Sprout className="h-4 w-4 text-emerald-800" />
-              Core Surveillance Actions
-            </h3>
-            <span className="text-[11px] text-stone-500 font-medium">Direct Portal Access</span>
-          </div>
-
-          <div className="mt-3 space-y-2.5 flex-1 overflow-y-auto pr-1">
-            {/* Action 1: Risk Forecast */}
-            <button
-              onClick={() => navigate('/dashboard/risk')}
-              className="w-full text-left p-3 rounded-lg border border-stone-200 hover:border-emerald-700 hover:bg-emerald-50/40 transition-all flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 bg-emerald-100 rounded flex items-center justify-center text-emerald-900 flex-shrink-0">
-                  <CloudSun className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-stone-900 group-hover:text-emerald-900">
-                    Risk Forecast
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    Evaluate 7-day disease & weather projection
-                  </div>
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-stone-400 group-hover:text-emerald-800 group-hover:translate-x-0.5 transition-all" />
-            </button>
-
-            {/* Action 2: Follow-up Monitoring */}
-            <button
-              onClick={() => navigate('/dashboard/follow-up')}
-              className="w-full text-left p-3 rounded-lg border border-stone-200 hover:border-emerald-700 hover:bg-emerald-50/40 transition-all flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 bg-emerald-100 rounded flex items-center justify-center text-emerald-900 flex-shrink-0">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-stone-900 group-hover:text-emerald-900">
-                    Follow-up Monitoring
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    Weekly image comparison & delta tracking
-                  </div>
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-stone-400 group-hover:text-emerald-800 group-hover:translate-x-0.5 transition-all" />
-            </button>
-
-            {/* Action 3: Expert Validation */}
-            <button
-              onClick={() => navigate('/dashboard/approvals')}
-              className="w-full text-left p-3 rounded-lg border border-stone-200 hover:border-emerald-700 hover:bg-emerald-50/40 transition-all flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 bg-amber-100 rounded flex items-center justify-center text-amber-800 flex-shrink-0">
-                  <ClipboardCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-stone-900 group-hover:text-amber-900">
-                    Expert Validation
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    {stats.pendingValidation} detections awaiting officer approval
-                  </div>
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-stone-400 group-hover:text-amber-800 group-hover:translate-x-0.5 transition-all" />
-            </button>
-
-            {/* Action 4: Disease Alerts */}
-            <button
-              onClick={() => navigate('/dashboard/alerts')}
-              className="w-full text-left p-3 rounded-lg border border-stone-200 hover:border-emerald-700 hover:bg-emerald-50/40 transition-all flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 bg-red-100 rounded flex items-center justify-center text-red-800 flex-shrink-0">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-stone-900 group-hover:text-red-900">
-                    Disease & Pest Alerts
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    {stats.activeAlerts} high priority field advisories
-                  </div>
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-stone-400 group-hover:text-red-800 group-hover:translate-x-0.5 transition-all" />
-            </button>
-          </div>
-
-          <div className="pt-3 border-t border-stone-200 text-xs text-stone-500 flex justify-between items-center">
-            <span>District: Nashik Division</span>
-            <span className="font-semibold text-stone-800">486 Fields Active</span>
-          </div>
-        </div>
-
-        {/* Box 2: Recent Field Activity Feed */}
-        <div className="bg-white rounded-lg border border-stone-200 p-5 shadow-xs flex flex-col h-[28rem]">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-            <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-stone-700" />
-              Surveillance Activity
-            </h3>
-            <span className="text-[11px] text-stone-500">Live Stream</span>
-          </div>
-
-          <div className="mt-3 flex-1 overflow-y-auto space-y-3 pr-1">
-            {recentActivity.map((activity) => (
-              <div
-                key={activity.id}
-                onClick={() => activity.actionRoute && navigate(activity.actionRoute)}
-                className="p-2.5 rounded-lg border border-stone-200 hover:border-stone-400 hover:bg-stone-50 cursor-pointer transition-colors"
+        <div className="flex items-center gap-2">
+          {/* Time window selector */}
+          <div className="flex items-center rounded border border-stone-200 overflow-hidden text-[10px] font-semibold">
+            {[['7d', '7 days'], ['14d', '14 days'], ['30d', '30 days']].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setTimeWindow(val)}
+                className={`px-2.5 py-1.5 transition-colors ${timeWindow === val ? 'text-white' : 'text-stone-600 hover:bg-stone-50'}`}
+                style={timeWindow === val ? { background: 'var(--cs-green-800)' } : {}}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="text-xs font-bold text-stone-900">
-                    {activity.title}
-                  </div>
-                  <StatusIndicator status={activity.status} />
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate('/dashboard/reports')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white rounded transition-colors"
+            style={{ background: 'var(--cs-green-800)' }}
+          >
+            <Download className="h-3.5 w-3.5" /> Export Summary
+          </button>
+        </div>
+      </div>
+
+      {/* ── Case Status Pipeline ── */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Case Pipeline</span>
+          <button onClick={() => navigate('/dashboard/alerts')} className="text-[10px] font-semibold text-emerald-800 hover:underline flex items-center gap-1">
+            View all cases <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+          {[
+            { label: 'New Signal', count: DEMO_CASE_STATUS_COUNTS.newSignal, color: '#2563eb', bg: '#eff6ff' },
+            { label: 'Under Review', count: DEMO_CASE_STATUS_COUNTS.underReview, color: '#d97706', bg: '#fffbeb' },
+            { label: 'Expert Val.', count: DEMO_CASE_STATUS_COUNTS.expertValidation, color: '#b45309', bg: '#fef3c7' },
+            { label: 'Visit Req.', count: DEMO_CASE_STATUS_COUNTS.fieldVisitRequired, color: '#b91c1c', bg: '#fef2f2' },
+            { label: 'Confirmed', count: DEMO_CASE_STATUS_COUNTS.confirmed, color: '#991b1b', bg: '#fee2e2' },
+            { label: 'Action Adv.', count: DEMO_CASE_STATUS_COUNTS.actionAdvised, color: '#5c6b2e', bg: '#f4f5e8' },
+            { label: 'Follow-up', count: DEMO_CASE_STATUS_COUNTS.followUpRequired, color: '#1e4d38', bg: '#f0f8f3' },
+            { label: 'Resolved', count: DEMO_CASE_STATUS_COUNTS.resolved, color: '#737373', bg: '#f5f5f5' },
+          ].map(({ label, count, color, bg }) => (
+            <div key={label} className="rounded border border-stone-200 p-2 text-center" style={{ background: bg }}>
+              <div className="text-lg font-black" style={{ color }}>{count}</div>
+              <div className="text-[9px] font-semibold text-stone-500 mt-0.5 leading-tight">{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Main Grid: Risk Movement + Areas Needing Attention ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 items-start">
+
+        {/* ── RISK MOVEMENT ── */}
+        <div className="xl:col-span-2 space-y-1">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Risk Movement</span>
+              <div className="text-sm font-bold text-stone-900">Where is risk moving?</div>
+            </div>
+            <span className="text-[9px] text-stone-400">{timeWindow} window</span>
+          </div>
+
+          <div className="rounded border border-stone-200 overflow-hidden" style={{ background: '#fff' }}>
+            {DEMO_RISK_MOVEMENT.map((item, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 px-4 py-3 border-b border-stone-100 last:border-0"
+              >
+                {/* Trend sign */}
+                <div className="flex-shrink-0 w-12 text-right">
+                  <span
+                    className={`text-sm font-black ${item.change > 0 ? 'text-red-700' : 'text-emerald-700'}`}
+                  >
+                    {item.change > 0 ? '+' : ''}{item.change}%
+                  </span>
                 </div>
-                <p className="text-[11px] text-stone-600 mt-1 leading-snug">
-                  {activity.description}
-                </p>
-                <div className="text-[10px] text-stone-400 mt-1.5 flex items-center justify-between">
-                  <span>{activity.time}</span>
-                  <span className="text-emerald-800 font-semibold hover:underline">View details →</span>
+
+                {/* Label + crop */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-semibold text-stone-800 truncate">{item.label}</div>
+                  <div className="text-[10px] text-stone-400 mt-0.5">{item.crop}</div>
+                </div>
+
+                {/* Sparkline */}
+                <div className="flex-shrink-0">
+                  <MiniSparkline
+                    values={item.trend === 'rising' ? [3, 5, 8, 12, 18] : item.trend === 'falling' ? [18, 14, 11, 8, 5] : [10, 11, 10, 11, 10]}
+                    color={item.trend === 'rising' ? '#b91c1c' : item.trend === 'falling' ? '#2d6a4f' : '#d97706'}
+                  />
+                </div>
+
+                {/* Trend tag */}
+                <div className="flex-shrink-0 w-16">
+                  <TrendBadge trend={item.trend} />
+                  {item.villages && (
+                    <div className="text-[9px] text-stone-400 mt-0.5">{item.villages} villages</div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="pt-3 border-t border-stone-200 text-center">
+          {/* Primary field spotlight */}
+          <div
+            className="mt-3 rounded border border-stone-200 p-3"
+            style={{ background: '#fff' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Current Observation</span>
+              <span className="cs-badge cs-badge-amber">Moderate Risk</span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="text-sm font-bold text-stone-900">{primaryField.name}</div>
+                <div className="text-[11px] text-stone-500">{primaryField.farmerName} · {primaryField.village}</div>
+                <div className="text-[11px] text-stone-500 mt-0.5">
+                  {primaryField.crop} · <span className="font-medium text-stone-700">{primaryField.growthStage}</span>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="text-[10px] text-stone-500">Severity</div>
+                <div className="text-base font-black text-red-700">{primaryField.activeSeverity}%</div>
+                <div className="text-[10px] text-red-600 flex items-center justify-end gap-0.5">
+                  <TrendingUp className="h-2.5 w-2.5" />
+                  +{primaryField.activeSeverity - primaryField.previousSeverity}%
+                </div>
+              </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-stone-100 grid grid-cols-2 gap-2 text-[10px]">
+              <div>
+                <span className="text-stone-400">Disease:</span>{' '}
+                <span className="font-semibold text-stone-800">{primaryField.diseaseStatus}</span>
+              </div>
+              <div>
+                <span className="text-stone-400">Pest:</span>{' '}
+                <span className="font-semibold text-stone-800">{primaryField.pestStatus}</span>
+              </div>
+            </div>
+            <div className="mt-2 flex gap-1.5">
+              <button
+                onClick={() => navigate('/dashboard/risk')}
+                className="flex-1 text-center text-[10px] font-semibold py-1.5 rounded transition-colors text-white"
+                style={{ background: 'var(--cs-green-800)' }}
+              >
+                Open Risk Forecast
+              </button>
+              <button
+                onClick={() => navigate('/dashboard/follow-up')}
+                className="flex-1 text-center text-[10px] font-semibold py-1.5 rounded border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors"
+              >
+                Follow-up
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── AREAS NEEDING ATTENTION ── */}
+        <div className="xl:col-span-3">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Operational Queue</span>
+              <div className="text-sm font-bold text-stone-900">Areas needing attention</div>
+            </div>
             <button
-              onClick={() => navigate('/dashboard/history')}
-              className="text-xs font-semibold text-emerald-800 hover:underline"
+              onClick={() => navigate('/dashboard/map')}
+              className="flex items-center gap-1 text-[10px] font-semibold text-emerald-800 hover:underline"
             >
-              View Complete Surveillance Log →
+              <MapPin className="h-3 w-3" /> View on map
             </button>
           </div>
-        </div>
 
-        {/* Box 3: Field Operations & Telemetry */}
-        <div className="bg-white rounded-lg border border-stone-200 p-5 shadow-xs flex flex-col h-[28rem]">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-            <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
-              <Shield className="h-4 w-4 text-emerald-800" />
-              Platform Diagnostics
-            </h3>
-            <span className="text-[11px] text-emerald-700 font-semibold">Active</span>
-          </div>
-
-          <div className="mt-3 space-y-3 flex-1">
-            <div className="flex items-center justify-between p-2.5 bg-stone-50 rounded border border-stone-200 text-xs">
-              <div>
-                <span className="font-semibold text-stone-900 block">AI Image Inference Pipeline</span>
-                <span className="text-[11px] text-stone-500">Latency: {systemStatus.aiAnalysis?.latency}</span>
-              </div>
-              <StatusIndicator status={systemStatus.aiAnalysis?.status} />
+          <div className="rounded border border-stone-200 overflow-hidden" style={{ background: '#fff' }}>
+            {/* Table header */}
+            <div className="grid grid-cols-12 px-4 py-2 bg-stone-50 border-b border-stone-200 text-[9px] font-black tracking-wider uppercase text-stone-400">
+              <div className="col-span-3">Village / Crop</div>
+              <div className="col-span-2">Signal</div>
+              <div className="col-span-2">Trend</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Action</div>
+              <div className="col-span-1"></div>
             </div>
 
-            <div className="flex items-center justify-between p-2.5 bg-stone-50 rounded border border-stone-200 text-xs">
-              <div>
-                <span className="font-semibold text-stone-900 block">Queue & Image Intake</span>
-                <span className="text-[11px] text-stone-500">{systemStatus.imageProcessing?.queue} images pending</span>
-              </div>
-              <StatusIndicator status={systemStatus.imageProcessing?.status} />
-            </div>
+            {DEMO_ATTENTION_AREAS.map((area) => (
+              <div
+                key={area.id}
+                onClick={() => setSelectedArea(selectedArea?.id === area.id ? null : area)}
+                className={`cs-queue-row cs-queue-row-${area.riskLevel} grid grid-cols-12 px-4 py-3 border-b border-stone-100 last:border-0 cursor-pointer`}
+              >
+                {/* Village + Crop */}
+                <div className="col-span-3 flex items-start gap-1.5">
+                  <RiskDot level={area.riskLevel} />
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-bold text-stone-900 truncate">{area.village}</div>
+                    <div className="text-[10px] text-stone-500 truncate">{area.crop}</div>
+                    <div className="text-[9px] text-stone-400 mt-0.5">{area.lastObservation}</div>
+                  </div>
+                </div>
 
-            <div className="flex items-center justify-between p-2.5 bg-stone-50 rounded border border-stone-200 text-xs">
-              <div>
-                <span className="font-semibold text-stone-900 block">State Database Sync</span>
-                <span className="text-[11px] text-stone-500">Last: {systemStatus.dataSync?.lastSync}</span>
-              </div>
-              <StatusIndicator status={systemStatus.dataSync?.status} />
-            </div>
+                {/* Signal */}
+                <div className="col-span-2 flex items-center">
+                  <span className="text-[10px] font-semibold text-stone-700 leading-tight">{area.signal}</span>
+                </div>
 
-            <div className="flex items-center justify-between p-2.5 bg-stone-50 rounded border border-stone-200 text-xs">
-              <div>
-                <span className="font-semibold text-stone-900 block">Government API Gateway</span>
-                <span className="text-[11px] text-stone-500">Uptime: {systemStatus.apiHealth?.uptime}</span>
-              </div>
-              <StatusIndicator status={systemStatus.apiHealth?.status} />
-            </div>
+                {/* Trend */}
+                <div className="col-span-2 flex flex-col justify-center gap-0.5">
+                  <TrendBadge trend={area.trend} />
+                  <span className="text-[9px] text-stone-400">{area.changeText}</span>
+                </div>
 
-            <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded text-xs text-emerald-950 flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-emerald-700 flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block">All District Systems Operational</span>
-                <span className="text-[11px] text-emerald-800">
-                  PMFBY crop surveillance synchronizing across 486 field plots.
-                </span>
-              </div>
-            </div>
-          </div>
+                {/* Status */}
+                <div className="col-span-2 flex items-center">
+                  <SituationBadge status={area.confirmationStatus} />
+                </div>
 
-          <div className="pt-3 border-t border-stone-200 text-xs text-stone-500 flex justify-between items-center">
-            <span>Model Version: v2.4 (Agri-ResNet)</span>
-            <span className="font-semibold text-stone-800">Accuracy: 94.7%</span>
+                {/* Action */}
+                <div className="col-span-2 flex items-center">
+                  <span className="text-[10px] font-semibold text-stone-600">{area.action}</span>
+                </div>
+
+                {/* Detail arrow */}
+                <div className="col-span-1 flex items-center justify-end">
+                  <ChevronRight
+                    className={`h-3.5 w-3.5 text-stone-400 transition-transform ${selectedArea?.id === area.id ? 'rotate-90' : ''}`}
+                  />
+                </div>
+
+                {/* Expanded detail row */}
+                {selectedArea?.id === area.id && (
+                  <div className="col-span-12 mt-3 pt-3 border-t border-stone-100">
+                    <div className="rounded border border-stone-200 p-3" style={{ background: '#faf9f7' }}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-[10px] font-black uppercase tracking-wider text-stone-500 mb-1.5">Why this area is flagged</div>
+                          <ul className="space-y-1 text-[11px] text-stone-700">
+                            <li className="flex items-start gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1 flex-shrink-0" />
+                              Severity increased {area.changeText} since last observation
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 flex-shrink-0" />
+                              Nearby fields in {area.taluka} block reporting similar symptoms
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-stone-400 mt-1 flex-shrink-0" />
+                              No field officer visit in the last 5 days
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="flex flex-col gap-1.5 flex-shrink-0">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate('/dashboard/approvals') }}
+                            className="px-3 py-1.5 text-[10px] font-bold rounded text-white transition-colors"
+                            style={{ background: 'var(--cs-green-800)' }}
+                          >
+                            Open Case File
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate('/dashboard/map') }}
+                            className="px-3 py-1.5 text-[10px] font-semibold rounded border border-stone-200 text-stone-700 hover:bg-stone-50"
+                          >
+                            View on Map
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-stone-200 flex items-center gap-2 text-[9px] text-stone-400">
+                        <span className="cs-mono">{area.caseNumber}</span>
+                        <span>·</span>
+                        <span>Last observed: {area.lastObservation}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Regional Surveillance Coverage */}
-      <div className="bg-white rounded-lg border border-stone-200 p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 mb-4 border-b border-stone-200">
+      {/* ── Action Queue ── */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider">
-              Regional Agricultural Monitoring Matrix
-            </h3>
-            <p className="text-xs text-stone-500 mt-0.5">
-              Coverage percentage, active crop stages, and primary observed pathogens across key agricultural zones.
-            </p>
+            <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Response</span>
+            <div className="text-sm font-bold text-stone-900">Next actions</div>
           </div>
-          <button
-            onClick={() => navigate('/dashboard/map')}
-            className="text-xs font-semibold text-emerald-800 hover:underline flex items-center gap-1"
-          >
-            <MapPin className="h-3.5 w-3.5" /> View GIS Hotspot Map →
-          </button>
+          <span className="cs-badge cs-badge-red">
+            {DEMO_ACTION_QUEUE.filter(a => a.priority === 'critical' || a.priority === 'high').length} Urgent
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-          <div className="p-3.5 bg-stone-50 rounded border border-stone-200">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-stone-900 text-sm">Nashik District</span>
-              <span className="text-xs font-bold text-emerald-800">84% Covered</span>
-            </div>
-            <div className="mt-2 space-y-1 text-stone-600 text-[11px]">
-              <div>Primary Crop: <strong>Rice & Soybean</strong></div>
-              <div>Current Stage: <strong>Tillering / Pod Formation</strong></div>
-              <div>Primary Risk: <span className="text-amber-700 font-semibold">Leaf Blast (Moderate)</span></div>
-            </div>
-          </div>
+        <div className="rounded border border-stone-200 overflow-hidden" style={{ background: '#fff' }}>
+          {DEMO_ACTION_QUEUE.map((action) => (
+            <div
+              key={action.id}
+              onClick={() => navigate(action.route)}
+              className={`
+                flex items-center gap-4 px-4 py-3 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50 transition-colors
+                ${action.priority === 'critical' ? 'border-l-2 border-l-red-600' : action.priority === 'high' ? 'border-l-2 border-l-amber-500' : 'border-l-2 border-l-stone-300'}
+              `}
+            >
+              {/* Priority */}
+              <div className="flex-shrink-0 w-14">
+                {action.priority === 'critical' ? (
+                  <span className="cs-badge cs-badge-red">Critical</span>
+                ) : action.priority === 'high' ? (
+                  <span className="cs-badge cs-badge-amber">High</span>
+                ) : (
+                  <span className="cs-badge cs-badge-neutral">Medium</span>
+                )}
+              </div>
 
-          <div className="p-3.5 bg-stone-50 rounded border border-stone-200">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-stone-900 text-sm">Pune Division</span>
-              <span className="text-xs font-bold text-emerald-800">78% Covered</span>
-            </div>
-            <div className="mt-2 space-y-1 text-stone-600 text-[11px]">
-              <div>Primary Crop: <strong>Sugarcane & Wheat</strong></div>
-              <div>Current Stage: <strong>Vegetative Growth</strong></div>
-              <div>Primary Risk: <span className="text-emerald-700 font-semibold">Low Pathology</span></div>
-            </div>
-          </div>
+              {/* Action type */}
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-bold text-stone-900">{action.type}</div>
+                <div className="text-[10px] text-stone-500 truncate">{action.location}</div>
+                <div className="text-[10px] text-stone-400 mt-0.5">{action.reason}</div>
+              </div>
 
-          <div className="p-3.5 bg-stone-50 rounded border border-stone-200">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-stone-900 text-sm">Nagpur Division</span>
-              <span className="text-xs font-bold text-emerald-800">65% Covered</span>
-            </div>
-            <div className="mt-2 space-y-1 text-stone-600 text-[11px]">
-              <div>Primary Crop: <strong>Cotton & Soybean</strong></div>
-              <div>Current Stage: <strong>Square Formation</strong></div>
-              <div>Primary Risk: <span className="text-red-700 font-semibold">Bacterial Blight / Whitefly</span></div>
-            </div>
-          </div>
+              {/* Due */}
+              <div className="flex-shrink-0 text-right">
+                <div className="text-[10px] text-stone-500">Due</div>
+                <div
+                  className={`text-[11px] font-bold ${action.status === 'overdue' ? 'text-red-700' : 'text-stone-800'}`}
+                >
+                  {action.due}
+                </div>
+              </div>
 
-          <div className="p-3.5 bg-stone-50 rounded border border-stone-200">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-stone-900 text-sm">Chhatrapati Sambhajinagar</span>
-              <span className="text-xs font-bold text-emerald-800">72% Covered</span>
+              {/* Arrow */}
+              <div className="flex-shrink-0">
+                <ChevronRight className="h-4 w-4 text-stone-400" />
+              </div>
             </div>
-            <div className="mt-2 space-y-1 text-stone-600 text-[11px]">
-              <div>Primary Crop: <strong>Cotton & Pulses</strong></div>
-              <div>Current Stage: <strong>Vegetative / Flowering</strong></div>
-              <div>Primary Risk: <span className="text-amber-700 font-semibold">Moisture Stress</span></div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Regional coverage + weather context row ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Regional matrix */}
+        <div className="md:col-span-2 rounded border border-stone-200 overflow-hidden" style={{ background: '#fff' }}>
+          <div className="px-4 py-2.5 border-b border-stone-200 flex items-center justify-between">
+            <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Regional Coverage</span>
+            <button onClick={() => navigate('/dashboard/map')} className="text-[10px] font-semibold text-emerald-800 hover:underline flex items-center gap-1">
+              GIS Map <MapPin className="h-2.5 w-2.5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 divide-x divide-y divide-stone-100">
+            {[
+              { region: 'Nashik District', coverage: 84, crop: 'Rice & Soybean', stage: 'Tillering', risk: 'Leaf Blast (Moderate)', riskLevel: 'medium' },
+              { region: 'Pune Division', coverage: 78, crop: 'Sugarcane & Wheat', stage: 'Vegetative', risk: 'Low pathology', riskLevel: 'low' },
+              { region: 'Nagpur Division', coverage: 65, crop: 'Cotton & Soybean', stage: 'Square Formation', risk: 'Bacterial Blight / Whitefly', riskLevel: 'high' },
+              { region: 'Chhatrapati Sambhajinagar', coverage: 72, crop: 'Cotton & Pulses', stage: 'Vegetative/Flowering', risk: 'Moisture Stress', riskLevel: 'medium' },
+            ].map((r) => (
+              <div key={r.region} className="p-3 text-[10px]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-stone-800 text-[11px]">{r.region}</span>
+                  <span className="font-bold text-emerald-800">{r.coverage}%</span>
+                </div>
+                <div className="text-stone-500">{r.crop} · {r.stage}</div>
+                <div
+                  className={`mt-1 font-semibold ${r.riskLevel === 'high' ? 'text-red-700' : r.riskLevel === 'medium' ? 'text-amber-700' : 'text-emerald-700'}`}
+                >
+                  {r.risk}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Weather context */}
+        <div className="rounded border border-stone-200 overflow-hidden" style={{ background: '#fff' }}>
+          <div className="px-4 py-2.5 border-b border-stone-200">
+            <span className="text-[10px] font-black tracking-widest uppercase text-stone-500">Weather Context</span>
+          </div>
+          <div className="p-3 space-y-2.5 text-[10px]">
+            {[
+              { label: 'Rainfall (48h)', value: 'Moderate expected', color: 'var(--cs-blue-700)' },
+              { label: 'Humidity', value: '82–87% RH', color: 'var(--cs-blue-700)' },
+              { label: 'Temperature', value: '28–32°C', color: 'var(--cs-amber-700)' },
+              { label: 'Wind', value: 'SW · 14 km/h', color: 'var(--cs-charcoal-500)' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="flex justify-between items-center py-1 border-b border-stone-100 last:border-0">
+                <span className="text-stone-500">{label}</span>
+                <span className="font-semibold" style={{ color }}>{value}</span>
+              </div>
+            ))}
+
+            <div className="mt-2 pt-2 border-t border-stone-200 rounded bg-amber-50 border border-amber-200 p-2.5">
+              <div className="text-[10px] font-semibold text-amber-800 leading-relaxed">
+                Current conditions may support increased pest and fungal activity in cotton and paddy regions.
+              </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   )
 }

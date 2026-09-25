@@ -5,7 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 
 function App() {
   return (
-    <div className="h-full bg-stone-50 text-stone-900">
+    <div style={{ height: '100%', background: 'var(--cs-paper)', color: '#1a1a1a' }}>
       <BrowserRouter>
         <AuthProvider>
           <AppRouter />

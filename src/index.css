@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 html,
 body,
@@ -6,32 +7,345 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===================================================
+   CROVYSURE DESIGN TOKENS
+   Agricultural Early Warning & Field Response System
+   =================================================== */
+
+:root {
+  /* Paper / off-white backgrounds */
+  --cs-paper: #faf9f7;
+  --cs-paper-warm: #f7f5f0;
+  --cs-paper-tan: #f0ede6;
+
+  /* Deep botanical green — agriculture/healthy */
+  --cs-green-900: #1a3d2e;
+  --cs-green-800: #1e4d38;
+  --cs-green-700: #2d6a4f;
+  --cs-green-600: #3a7d5c;
+  --cs-green-500: #52946f;
+  --cs-green-100: #e8f4ee;
+  --cs-green-50: #f0f8f3;
+
+  /* Muted olive — secondary agricultural */
+  --cs-olive-700: #5c6b2e;
+  --cs-olive-600: #6e7e3a;
+  --cs-olive-200: #d4da9e;
+  --cs-olive-100: #eaedca;
+  --cs-olive-50: #f4f5e8;
+
+  /* Dark charcoal — primary text */
+  --cs-charcoal-900: #1a1a1a;
+  --cs-charcoal-800: #2d2d2d;
+  --cs-charcoal-700: #404040;
+  --cs-charcoal-600: #525252;
+  --cs-charcoal-500: #737373;
+  --cs-charcoal-400: #a3a3a3;
+  --cs-charcoal-200: #e5e5e5;
+  --cs-charcoal-100: #f5f5f5;
+  --cs-charcoal-50: #fafafa;
+
+  /* Earthy brown */
+  --cs-brown-800: #5c3d1e;
+  --cs-brown-700: #7a5230;
+  --cs-brown-200: #d4b896;
+  --cs-brown-100: #ede0cc;
+  --cs-brown-50: #f7f0e6;
+
+  /* Warm amber — attention/watch */
+  --cs-amber-800: #92400e;
+  --cs-amber-700: #b45309;
+  --cs-amber-600: #d97706;
+  --cs-amber-100: #fef3c7;
+  --cs-amber-50: #fffbeb;
+
+  /* Restrained red — confirmed risk/critical */
+  --cs-red-800: #7f1d1d;
+  --cs-red-700: #991b1b;
+  --cs-red-600: #b91c1c;
+  --cs-red-200: #fecaca;
+  --cs-red-100: #fee2e2;
+  --cs-red-50: #fef2f2;
+
+  /* Muted blue — weather/water/environmental */
+  --cs-blue-800: #1e3a5f;
+  --cs-blue-700: #1d4ed8;
+  --cs-blue-600: #2563eb;
+  --cs-blue-100: #dbeafe;
+  --cs-blue-50: #eff6ff;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: #d4c9b8;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #a89880;
 }
 
 /* Leaflet map fixes */
 .leaflet-container {
   height: 100%;
   width: 100%;
+  font-family: 'Inter', sans-serif !important;
 }
+
+/* ===================================================
+   CROVYSURE COMPONENT PRIMITIVES
+   =================================================== */
+
+/* Status badges */
+.cs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.cs-badge-red {
+  background: var(--cs-red-50);
+  color: var(--cs-red-700);
+  border: 1px solid #fca5a5;
+}
+
+.cs-badge-amber {
+  background: var(--cs-amber-50);
+  color: var(--cs-amber-800);
+  border: 1px solid #fcd34d;
+}
+
+.cs-badge-green {
+  background: var(--cs-green-50);
+  color: var(--cs-green-800);
+  border: 1px solid #6ee7b7;
+}
+
+.cs-badge-blue {
+  background: var(--cs-blue-50);
+  color: var(--cs-blue-800);
+  border: 1px solid #93c5fd;
+}
+
+.cs-badge-olive {
+  background: var(--cs-olive-50);
+  color: var(--cs-olive-700);
+  border: 1px solid var(--cs-olive-200);
+}
+
+.cs-badge-neutral {
+  background: var(--cs-charcoal-100);
+  color: var(--cs-charcoal-600);
+  border: 1px solid var(--cs-charcoal-200);
+}
+
+/* Risk status dots */
+.risk-dot-high { background: var(--cs-red-600); }
+.risk-dot-medium { background: var(--cs-amber-600); }
+.risk-dot-low { background: var(--cs-green-600); }
+.risk-dot-neutral { background: var(--cs-charcoal-400); }
+
+/* Trend indicators */
+.trend-rising {
+  color: var(--cs-red-700);
+  font-weight: 700;
+}
+.trend-stable {
+  color: var(--cs-charcoal-500);
+  font-weight: 600;
+}
+.trend-falling {
+  color: var(--cs-green-700);
+  font-weight: 700;
+}
+
+/* Timeline line */
+.cs-timeline-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--cs-charcoal-200), transparent);
+}
+
+/* Map marker styles */
+.cs-map-marker-high {
+  background: var(--cs-red-600);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--cs-red-700);
+}
+.cs-map-marker-medium {
+  background: var(--cs-amber-600);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--cs-amber-700);
+}
+.cs-map-marker-low {
+  background: var(--cs-green-600);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--cs-green-700);
+}
+.cs-map-marker-emerging {
+  background: var(--cs-amber-600);
+  border: 2px solid var(--cs-amber-100);
+  animation: pulse-amber 2s infinite;
+}
+.cs-map-marker-confirmed {
+  background: var(--cs-red-700);
+  border: 2px solid #fff;
+}
+.cs-map-marker-under-review {
+  background: var(--cs-blue-600);
+  border: 2px solid #fff;
+}
+.cs-map-marker-resolved {
+  background: var(--cs-green-600);
+  border: 2px solid var(--cs-green-100);
+  opacity: 0.6;
+}
+
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(217, 119, 6, 0); }
+}
+
+/* Section divider */
+.cs-divider {
+  height: 1px;
+  background: var(--cs-charcoal-200);
+  margin: 0;
+}
+
+/* Field case file header */
+.cs-case-header {
+  background: var(--cs-paper-tan);
+  border-bottom: 2px solid var(--cs-charcoal-200);
+}
+
+/* Operational queue row */
+.cs-queue-row {
+  border-left: 3px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cs-queue-row:hover {
+  background: var(--cs-paper-warm);
+}
+.cs-queue-row-high {
+  border-left-color: var(--cs-red-600);
+}
+.cs-queue-row-medium {
+  border-left-color: var(--cs-amber-600);
+}
+.cs-queue-row-low {
+  border-left-color: var(--cs-green-600);
+}
+
+/* Trend sparkline bar */
+.cs-spark-bar {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 20px;
+}
+.cs-spark-bar span {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--cs-charcoal-300);
+  display: block;
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--cs-green-700);
+  outline-offset: 2px;
+}
+
+/* Mono font for IDs and codes */
+.cs-mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.85em;
+}
+
+/* Sidebar nav active left bar */
+.cs-nav-active {
+  position: relative;
+}
+.cs-nav-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background: var(--cs-green-700);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Evidence trail item */
+.cs-evidence-item {
+  padding: 10px 12px;
+  border-left: 2px solid var(--cs-charcoal-200);
+  position: relative;
+}
+.cs-evidence-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cs-charcoal-300);
+  border: 2px solid var(--cs-paper);
+}
+
+/* Transition helpers */
+.cs-transition { transition: all 0.15s ease; }
+.cs-transition-slow { transition: all 0.3s ease; }
+
+/* Panel slide-in */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.cs-panel-enter { animation: slideInRight 0.2s ease; }
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: 4px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+}

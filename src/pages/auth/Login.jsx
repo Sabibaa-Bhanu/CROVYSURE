@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff, User, Shield, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, User, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
@@ -60,16 +60,25 @@ const Login = () => {
       <div className="max-w-md w-full space-y-6">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-14 w-14 bg-emerald-900 rounded-lg flex items-center justify-center shadow-xs">
-            <Shield className="h-7 w-7 text-white" />
+          <div className="mx-auto h-14 w-14 rounded flex items-center justify-center shadow-xs" style={{ background: '#1e4d38' }}>
+            <svg viewBox="0 0 28 28" className="h-8 w-8" fill="none">
+              <path
+                d="M14 3C8.5 3 4 7.8 4 13.5c0 4.2 2.5 7.8 6.2 9.5C11.2 18 14 12 14 12s2.8 6 3.8 11C21.5 21.3 24 17.7 24 13.5c0-5.7-4.5-10.5-10-10.5z"
+                fill="rgba(255,255,255,0.18)"
+                stroke="rgba(255,255,255,0.85)"
+                strokeWidth="1.4"
+              />
+              <path d="M10 14l3 3 5.5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <h2 className="mt-4 text-2xl font-black tracking-widest text-stone-900">
             CROVYSURE
           </h2>
           <p className="mt-1 text-xs text-stone-600">
-            Agricultural Intelligence &amp; Risk Surveillance Platform
+            Agricultural Early Warning &amp; Field Response System
           </p>
         </div>
+
 
         {/* Error Message */}
         {error && (
